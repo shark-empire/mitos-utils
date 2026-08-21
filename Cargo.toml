@@ -1,0 +1,8 @@
+[package]
+name = "mitos-utils"
+version = "0.1.0"
+edition = "2021"
+authors = ["Shark <babor3331@gmail.com>"]
+description = "Core system utilities for MITOS"
+
+[dependencies]
