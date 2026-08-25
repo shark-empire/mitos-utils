@@ -1,23 +1,86 @@
-use std::env;
-use std::fs;
-use std::io::{self, Read};
+//! `cat` -- concatenate files to stdout. Supports `-n`/`--number`,
+//! `-b`/`--number-nonblank`, reading multiple files, and `-` for
+//! stdin. Line-oriented (like the rest of this crate's text tools),
+//! not binary-safe -- see docs/compatibility.md.
 
-fn main() {
-    let args: Vec<String> = env::args().collect();
+use mitos_utils::common::errors::{run, AppError, AppResult};
+use mitos_utils::common::output::error_path;
+use std::fs::File;
+use std::io::{self, BufRead, BufReader, Write};
 
-    // Read from standard input if no file argument is provided
-    if args.len() < 2 {
-        let mut buffer = String::new();
-        if io::stdin().read_to_string(&mut buffer).is_ok() {
-            print!("{}", buffer);
+fn main() -> std::process::ExitCode {
+    run("cat", real_main)
+}
+
+fn real_main() -> AppResult<()> {
+    let mut number_all = false;
+    let mut number_nonblank = false;
+    let mut files: Vec<String> = Vec::new();
+
+    for arg in std::env::args().skip(1) {
+        match arg.as_str() {
+            "-n" | "--number" => number_all = true,
+            "-b" | "--number-nonblank" => number_nonblank = true,
+            "-" => files.push(arg),
+            _ if arg.starts_with("--") => {
+                return Err(AppError::usage(format!("unrecognized option '{}'", arg)))
+            }
+            _ if arg.starts_with('-') && arg.len() > 1 => {
+                return Err(AppError::usage(format!("invalid option -- '{}'", &arg[1..])))
+            }
+            _ => files.push(arg),
         }
-        return;
+    }
+    if files.is_empty() {
+        files.push("-".to_string());
     }
 
-    for path in &args[1..] {
-        match fs::read_to_string(path) {
-            Ok(content) => print!("{}", content),
-            Err(err) => eprintln!("cat: {}: {}", path, err),
+    let stdout = io::stdout();
+    let mut out = stdout.lock();
+    let mut line_no: u64 = 1;
+    let mut had_error = false;
+
+    for path in &files {
+        let reader: Box<dyn BufRead> = if path == "-" {
+            Box::new(BufReader::new(io::stdin()))
+        } else {
+            match File::open(path) {
+                Ok(f) => Box::new(BufReader::new(f)),
+                Err(err) => {
+                    error_path("cat", path, err);
+                    had_error = true;
+                    continue;
+                }
+            }
+        };
+        for line in reader.lines() {
+            let line = match line {
+                Ok(l) => l,
+                Err(err) => {
+                    error_path("cat", path, err);
+                    had_error = true;
+                    break;
+                }
+            };
+            if number_nonblank {
+                if line.is_empty() {
+                    let _ = writeln!(out);
+                } else {
+                    let _ = writeln!(out, "{:>6}\t{}", line_no, line);
+                    line_no += 1;
+                }
+            } else if number_all {
+                let _ = writeln!(out, "{:>6}\t{}", line_no, line);
+                line_no += 1;
+            } else {
+                let _ = writeln!(out, "{}", line);
+            }
         }
+    }
+
+    if had_error {
+        Err(AppError::silent(1))
+    } else {
+        Ok(())
     }
 }
