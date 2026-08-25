@@ -4,5 +4,18 @@ version = "0.1.0"
 edition = "2021"
 authors = ["Shark <babor3331@gmail.com>"]
 description = "Core system utilities for MITOS"
+license = "MIT"
+readme = "README.md"
 
+# mitos-utils intentionally has zero dependencies (including
+# dev-dependencies). It is meant to eventually be cross-compiled
+# against mitosOS's own target once the kernel exposes a hosted std,
+# and every crate we *don't* depend on is one less thing that needs
+# to exist for that port. See docs/architecture.md.
 [dependencies]
+
+[profile.release]
+opt-level = "z"   # optimize for size: these ship on the target system's disk image
+lto = true
+strip = true
+panic = "abort"
