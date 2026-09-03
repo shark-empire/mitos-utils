@@ -6,6 +6,24 @@ records what's covered and what's deliberately left out, so nobody
 has to rediscover it by reading source. If a script needs a flag not
 listed here as "supported", assume it isn't implemented yet.
 
+## Cross-cutting behavior (applies to every applet)
+
+- **`--help`**: prints a one-line usage string and exits `0`, before
+  the applet's own argument parsing runs. Deliberately *not* `-h` --
+  see docs/architecture.md for why (`ls -h`/`du -h` already mean
+  "human-readable").
+- **`--version`**: prints `"<name> (mitos-utils <version>)"` and
+  exits `0`.
+- **`--`**: end-of-options marker, supported by every applet that
+  takes file/path positional arguments (so e.g. `rm -- -oddfile`
+  works) -- see `common::args::split_dashdash` and
+  `tests/cli_infra.rs`. Applets with no flag/positional ambiguity in
+  the first place (`pwd`, `true`, `sync`, ...) don't need it and
+  don't call it.
+- **`mitos-box`**: every applet is also reachable through the single
+  multiplexed binary (`mitos-box <name> ...`, or a symlink named
+  `<name>` pointing at it) -- see docs/architecture.md.
+
 ## Platform scope
 
 This crate builds `std`-hosted binaries, not freestanding kernel
@@ -24,12 +42,71 @@ the mitosOS<->mitos-utils relationship. A few consequences:
 - `df`'s `statvfs` FFI binding assumes glibc's Linux/x86_64 struct
   layout. It is not expected to be correct on musl or BSD/macOS
   (different field layout) and is gated to `target_os = "linux"`
-  accordingly.
+  accordingly. This layout, along with `mount`/`umount`'s signatures
+  and `dmesg`'s `klogctl` signature, has been cross-checked against
+  the real `statvfs(3)`/`mount(2)`/`syslog(2)` man pages (not just
+  written from memory) -- see the "FFI verification" note below.
+- `dmesg` additionally needs `/proc/sys/kernel/dmesg_restrict` to be
+  `0` (or the caller to have `CAP_SYSLOG`/`CAP_SYS_ADMIN`) on modern
+  kernels; a permission error here is expected sandboxed/unprivileged
+  behavior, not a bug.
+- **`rm -r`/`chmod -R`/`chown -R`/`chgrp -R`'s TOCTOU hardening
+  (`common::safewalk`) is Linux-only.** On other targets, recursive
+  operations fall back to the original plain path-based walk (no
+  symlink-race protection). This isn't a struct-layout risk like the
+  items above -- it's a deliberate scope decision, since the
+  hardening's design specifically avoids the one thing (`O_DIRECTORY`/
+  `O_NOFOLLOW`'s per-architecture flag values) that would have made
+  extending it risky. See `safewalk.rs`'s own doc comment.
 - None of this has been compiled with a real Rust toolchain (none
   was available while writing it -- see docs/architecture.md). The
   logic has been manually reviewed (brace/paren balance, symbol
-  cross-referencing) but should be treated as unverified until it's
-  been through `cargo build` and `cargo test` for real.
+  cross-referencing, and -- for the riskiest FFI structs and flag
+  values -- diffed against real man pages/kernel headers) but should
+  be treated as unverified until it's been through `cargo build` and
+  `cargo test` for real.
+
+## FFI verification
+
+The hand-written `extern "C"` bindings are the highest-risk code in
+this crate (a wrong struct layout is undefined behavior, not just a
+wrong answer, per docs/architecture.md's "zero dependencies"
+rationale for why they exist at all instead of using the `libc`
+crate). Cross-checked field-for-field against current man pages:
+
+- `statvfs` (`df`): field order/types match `statvfs(3)` exactly
+  (`f_bsize`, `f_frsize`, `f_blocks`, `f_bfree`, `f_bavail`,
+  `f_files`, `f_ffree`, `f_favail`, `f_fsid`, `f_flag`, `f_namemax`,
+  plus glibc's trailing `int[6]` reserved padding).
+- `mount`/`umount` (`mount`, `umount`): signatures match `mount(2)`
+  exactly (`mount(source, target, filesystemtype, mountflags, data)`,
+  `umount(target)`).
+- `klogctl` (`dmesg`): signature and the `SYSLOG_ACTION_READ_ALL = 3`
+  constant match `syslog(2)`'s glibc wrapper exactly.
+- `AT_SYMLINK_NOFOLLOW = 0x100` / `AT_REMOVEDIR = 0x200`
+  (`common::safewalk`): confirmed identical across every Linux
+  architecture, including arm64, via `include/uapi/linux/fcntl.h` and
+  independent secondary sources.
+- **Explicitly avoided rather than verified**: `O_DIRECTORY`/
+  `O_NOFOLLOW`. These are *not* architecture-independent -- glibc/
+  x86_64 defines `O_DIRECTORY = 0200000`, but the arm64 kernel's own
+  uapi headers define `O_DIRECTORY = 040000` for AArch32-compat
+  reasons, and a real 2024 QEMU bug report shows `O_NOFOLLOW` arriving
+  as `O_LARGEFILE` under exactly this kind of cross-arch confusion.
+  `common::safewalk` was designed specifically to need neither value
+  (see that file's doc comment for the check-open-verify pattern used
+  instead) rather than risk hand-rolling a constant that's wrong on
+  one of mitosOS's two target architectures with no build error to
+  catch it.
+
+Not yet independently cross-checked against a header/man page (lower
+risk -- simpler signatures, well-established POSIX calls, but still
+unverified by an actual compile): `getpwuid`/`getpwnam`/
+`getgrgid`/`getgrnam`/`getgroups` (`common::users`), `chown`, `kill`,
+`sync`, `uname`, `gethostname`, `openat`/`unlinkat`/`fchmodat`/
+`fchownat` (`common::safewalk` -- these four have simple
+pointer/integer signatures with no struct-layout or cross-arch
+flag-value risk, unlike `O_DIRECTORY`/`O_NOFOLLOW` above).
 
 ## Known cross-cutting limitation: binary-safety
 
@@ -51,9 +128,9 @@ oddly or error rather than passing bytes through unchanged.
 | `mkdir` | `-p` | `-m MODE` |
 | `rmdir` | plain removal | `-p` (remove ancestors), `--ignore-fail-on-non-empty` |
 | `touch` | create-if-missing, update mtime | `-t TIMESTAMP`, `-r REFFILE`, `-a`/`-m` (atime only) |
-| `cp` | `-r`/`-R`/`--recursive` | `-p` (preserve mode/owner/time), `-i`, `-v`, symlink handling flags |
-| `mv` | rename, cross-filesystem fallback | `-i`, `-v`, `-n` |
-| `rm` | `-r`/`-R`, `-f` | `-i`, `-v` |
+| `cp` | `-r`/`-R`/`--recursive`, `-i`, `-p` (mtime only, see note below) | `-v`, symlink handling flags; `-p` doesn't preserve nested subdirectory mtimes in a `-r` tree (see `cp.rs`), and doesn't preserve ownership (needs root) |
+| `mv` | rename, cross-filesystem fallback (preserves mtime in the fallback), `-i` | `-v`, `-n` |
+| `rm` | `-r`/`-R`, `-f`, `-i`, `--` | `-v`; `-i` prompts once per top-level argument, not once per file inside a `-r` tree; TOCTOU-hardened recursion is Linux-only (see "Platform scope" above) |
 | `ln` | `-s`, `-f` | `-v`, `-b` (backup), hard-link-of-directory guard |
 | `pwd` | plain | `-L`/`-P` distinction (always logical) |
 | `basename` | suffix stripping, POSIX edge cases | `-a` (multiple operands), `-s` |
@@ -68,12 +145,12 @@ oddly or error rather than passing bytes through unchanged.
 |---|---|---|
 | `echo` | `-n`, `-e` | `-E` (explicit no-escape; it's the default) |
 | `printf` | `%s`, `%d`, `%x`, `%%`, `\n`/`\t`/`\\` | width/precision (`%5d`, `%.2f`), `%f`, `%o`, `%c` |
-| `head` | `-n N`, `-N`, multiple files | `-c` (byte count), `-q`/`-v` header control |
-| `tail` | `-n N`, `-N`, multiple files | `-f` (follow), `-c` |
+| `head` | `-n N`, `-N`, `-c N` (bytes), multiple files | `-q`/`-v` header control |
+| `tail` | `-n N`, `-N`, `-c N` (bytes; seeks on real files, buffers on stdin), multiple files | `-f` (follow) |
 | `grep` | substring match, `-i`, `-v`, `-n`, multiple files | regular expressions (this is closer to `grep -F`) |
-| `sort` | `-r`, `-n`, `-u` | `-k` (key field), `-t` (field separator), stable-sort guarantee across ties beyond Rust's stable `sort_by` |
+| `sort` | `-r`, `-n`, `-u`, `-k N` (single field, not an `N,M` range), `-t DELIM` | multiple/composite sort keys, stable-sort guarantee across ties beyond Rust's stable `sort_by` |
 | `uniq` | adjacent-duplicate collapsing, `-c`, `-d` | `-u` (unique-only), `-i` (case-insensitive) |
-| `wc` | `-l`, `-w`, `-c`, multi-file totals | `-m` (character count, distinct from byte count under multi-byte encodings) |
+| `wc` | `-l`, `-w`, `-c`, multi-file totals; streams in fixed-size chunks so it stays cheap on very large files | `-m` (character count, distinct from byte count under multi-byte encodings) |
 | `cut` | `-d`, `-f` with ranges/lists | `-c` (character ranges), `-b` (byte ranges) |
 | `tr` | literal set translation, `-d` | `[a-z]`-style ranges, `-c` (complement), `-s` (squeeze) |
 | `tee` | `-a`/`--append`, multiple files | `-i` (ignore SIGINT) |
@@ -110,9 +187,9 @@ oddly or error rather than passing bytes through unchanged.
 
 | Tool | Supported | Not implemented |
 |---|---|---|
-| `chmod` | octal (`755`), symbolic (`u+x`, `go-w`, `a=r,u+w`), `-R` | `X` (conditional execute), `s`/`t` symbolic bits, `--reference` |
-| `chown` | `owner`, `owner:group`, `-R` | numeric uid:gid without a passwd entry, `--reference` |
-| `chgrp` | group name, `-R` | numeric gid without a group entry, `--reference` |
+| `chmod` | octal (`755`), symbolic (`u+x`, `go-w`, `a=r,u+w`), `-R` (TOCTOU-hardened on Linux -- see "Platform scope"), `--` | `X` (conditional execute), `s`/`t` symbolic bits, `--reference` |
+| `chown` | `owner`, `owner:group`, `-R` (TOCTOU-hardened on Linux), `--` | numeric uid:gid without a passwd entry, `--reference` |
+| `chgrp` | group name, `-R` (TOCTOU-hardened on Linux), `--` | numeric gid without a group entry, `--reference` |
 
 ### Misc
 

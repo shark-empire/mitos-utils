@@ -3,6 +3,13 @@
 One-line usage for every utility in `mitos-utils`. See
 docs/compatibility.md for exactly which flags each one supports.
 
+Every command below also accepts `--help` (prints its usage and
+exits) and `--version`, and every command that takes file/path
+arguments accepts `--` to mark the end of options (so a file
+literally named `-oddfile` can still be referenced). Every one is
+also reachable through the single multiplexed binary,
+`mitos-box <name> [args...]` -- see `mitos-box` below.
+
 ## Filesystem
 
 - `cat [-n|-b] [FILE...]` -- concatenate files to stdout.
@@ -10,9 +17,9 @@ docs/compatibility.md for exactly which flags each one supports.
 - `mkdir [-p] DIR...` -- create directories.
 - `rmdir DIR...` -- remove empty directories.
 - `touch FILE...` -- create files / update modification time.
-- `cp [-r] SOURCE... DEST` -- copy files or directory trees.
-- `mv SOURCE... DEST` -- move/rename files or directories.
-- `rm [-r] [-f] FILE...` -- remove files or directory trees.
+- `cp [-r] [-i] [-p] SOURCE... DEST` -- copy files or directory trees (`-i` confirms overwrites, `-p` preserves modification time).
+- `mv [-i] SOURCE... DEST` -- move/rename files or directories (`-i` confirms overwrites).
+- `rm [-r] [-f] [-i] FILE...` -- remove files or directory trees (`-i` confirms each removal).
 - `ln [-s] [-f] TARGET LINK_NAME` -- create a hard or symbolic link.
 - `pwd` -- print the current working directory.
 - `basename PATH [SUFFIX]` -- strip directory (and suffix) from a path.
@@ -25,10 +32,10 @@ docs/compatibility.md for exactly which flags each one supports.
 
 - `echo [-n] [-e] TEXT...` -- print arguments.
 - `printf FORMAT [ARG...]` -- formatted output.
-- `head [-n N] [FILE...]` -- print the first N lines (default 10).
-- `tail [-n N] [FILE...]` -- print the last N lines (default 10).
+- `head [-n N] [-c N] [FILE...]` -- print the first N lines (default 10) or bytes.
+- `tail [-n N] [-c N] [FILE...]` -- print the last N lines (default 10) or bytes.
 - `grep [-i] [-v] [-n] PATTERN [FILE...]` -- print matching lines.
-- `sort [-r] [-n] [-u] [FILE...]` -- sort lines.
+- `sort [-r] [-n] [-u] [-k N] [-t DELIM] [FILE...]` -- sort lines (optionally by field N).
 - `uniq [-c] [-d] [FILE]` -- collapse adjacent duplicate lines.
 - `wc [-l] [-w] [-c] [FILE...]` -- count lines/words/bytes.
 - `cut -d DELIM -f LIST [FILE...]` -- extract fields from each line.
@@ -70,3 +77,9 @@ docs/compatibility.md for exactly which flags each one supports.
 
 - `clear` -- clear the terminal screen.
 - `true` -- exit successfully, doing nothing.
+
+## Multiplexed binary
+
+- `mitos-box <name> [args...]` -- act as any applet above, by name.
+  Also usable via a symlink/hardlink named after the applet (e.g.
+  `ln -s mitos-box cat`) -- see docs/architecture.md.
