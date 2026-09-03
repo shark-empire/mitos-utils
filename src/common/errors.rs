@@ -69,18 +69,37 @@ impl From<std::io::Error> for AppError {
 
 pub type AppResult<T> = Result<T, AppError>;
 
-/// Standard `main()` wrapper: runs `body`, and on `Err` prints
-/// `"<prog>: <message>"` (unless the message is empty) and returns
-/// the matching process exit code.
+/// Standard entry point for every applet binary and for `mitos-box`'s
+/// dispatch: handles `--help`/`--version` centrally (so none of the
+/// ~50 applets need to -- previously none of them supported either),
+/// then calls `body` with the applet's own arguments and reports any
+/// resulting error/exit code the same way for all of them.
+///
+/// Deliberately checks only the long form `--help`, not `-h`: several
+/// applets already use `-h` for their own purposes (`ls -h`, `du -h`
+/// = human-readable sizes), and GNU coreutils resolves the same
+/// conflict the same way -- `--help` is the one spelling guaranteed
+/// not to collide with a tool's own flags.
 ///
 /// ```ignore
 /// fn main() -> std::process::ExitCode {
-///     mitos_utils::common::errors::run("cat", real_main)
+///     let args: Vec<String> = std::env::args().skip(1).collect();
+///     mitos_utils::common::errors::run("cat", mitos_utils::applets::cat::USAGE, args, mitos_utils::applets::cat::run)
 /// }
 /// ```
-pub fn run(prog: &str, body: impl FnOnce() -> AppResult<()>) -> ExitCode {
+pub fn run(prog: &str, usage: &str, args: Vec<String>, body: impl FnOnce(Vec<String>) -> AppResult<()>) -> ExitCode {
     crate::common::output::reset_sigpipe();
-    match body() {
+
+    if args.iter().any(|a| a == "--help") {
+        println!("usage: {}", usage);
+        return ExitCode::from(EXIT_SUCCESS);
+    }
+    if args.iter().any(|a| a == "--version") {
+        println!("{} (mitos-utils {})", prog, env!("CARGO_PKG_VERSION"));
+        return ExitCode::from(EXIT_SUCCESS);
+    }
+
+    match body(args) {
         Ok(()) => ExitCode::from(EXIT_SUCCESS),
         Err(err) => {
             if !err.message.is_empty() {

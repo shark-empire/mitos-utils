@@ -2,6 +2,7 @@
 //! formatting, column layout) shared across utilities.
 
 use std::fmt;
+use std::io;
 
 /// `"<prog>: <msg>"` on stderr -- the standard coreutils error shape.
 pub fn error(prog: &str, msg: impl fmt::Display) {
@@ -38,6 +39,22 @@ pub fn reset_sigpipe() {}
 /// and friends when looping over multiple files).
 pub fn error_path(prog: &str, path: impl fmt::Display, msg: impl fmt::Display) {
     eprintln!("{}: {}: {}", prog, path, msg);
+}
+
+/// Prompt on stderr and read a yes/no answer from stdin -- used by
+/// `-i`/`--interactive` on `rm`, `cp`, and `mv`. Answers "no" if
+/// stdin can't be read (e.g. running non-interactively with stdin
+/// closed or redirected from `/dev/null`), matching coreutils' fail
+/// safe rather than fail-destructive behavior in that case.
+pub fn confirm(prompt: &str) -> bool {
+    use std::io::Write;
+    eprint!("{} ", prompt);
+    let _ = io::stderr().flush();
+    let mut line = String::new();
+    if io::stdin().read_line(&mut line).is_err() {
+        return false;
+    }
+    matches!(line.trim().chars().next(), Some('y') | Some('Y'))
 }
 
 /// Render a byte count the way `ls -h` / `du -h` / `df -h` / `free
