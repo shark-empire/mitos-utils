@@ -7,8 +7,9 @@
 //! via `env!("CARGO_BIN_EXE_<name>")` -- no mocking, these run the
 //! exact artifact that ships.
 
+use std::io::Write as _;
 use std::path::PathBuf;
-use std::process::{Command, Output};
+use std::process::{Command, Output, Stdio};
 use std::sync::atomic::{AtomicU32, Ordering};
 
 static COUNTER: AtomicU32 = AtomicU32::new(0);
@@ -43,6 +44,23 @@ fn run(bin: &str, args: &[&str]) -> Output {
 
 fn stdout_of(out: &Output) -> String {
     String::from_utf8_lossy(&out.stdout).into_owned()
+}
+
+fn run_with_stdin(bin: &str, args: &[&str], input: &str) -> Output {
+    let mut child = Command::new(bin)
+        .args(args)
+        .stdin(Stdio::piped())
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped())
+        .spawn()
+        .expect("spawn binary");
+    child
+        .stdin
+        .take()
+        .unwrap()
+        .write_all(input.as_bytes())
+        .expect("write stdin");
+    child.wait_with_output().expect("wait for output")
 }
 
 #[test]
@@ -228,4 +246,86 @@ fn stat_reports_existing_file_size() {
     let out = run(env!("CARGO_BIN_EXE_stat"), &[file.to_str().unwrap()]);
     assert!(out.status.success());
     assert!(stdout_of(&out).contains('5'));
+}
+
+#[test]
+fn rm_interactive_declines_on_no() {
+    let scratch = Scratch::new();
+    let file = scratch.join("keep.txt");
+    std::fs::write(&file, "x").unwrap();
+
+    let out = run_with_stdin(env!("CARGO_BIN_EXE_rm"), &["-i", file.to_str().unwrap()], "n\n");
+    assert!(out.status.success());
+    assert!(file.exists(), "file should survive a declined -i prompt");
+}
+
+#[test]
+fn rm_interactive_removes_on_yes() {
+    let scratch = Scratch::new();
+    let file = scratch.join("gone.txt");
+    std::fs::write(&file, "x").unwrap();
+
+    let out = run_with_stdin(env!("CARGO_BIN_EXE_rm"), &["-i", file.to_str().unwrap()], "y\n");
+    assert!(out.status.success());
+    assert!(!file.exists(), "file should be removed after a confirmed -i prompt");
+}
+
+#[test]
+fn cp_interactive_declines_overwrite_on_no() {
+    let scratch = Scratch::new();
+    let src = scratch.join("src.txt");
+    let dst = scratch.join("dst.txt");
+    std::fs::write(&src, "new content").unwrap();
+    std::fs::write(&dst, "original content").unwrap();
+
+    let out = run_with_stdin(
+        env!("CARGO_BIN_EXE_cp"),
+        &["-i", src.to_str().unwrap(), dst.to_str().unwrap()],
+        "n\n",
+    );
+    assert!(out.status.success());
+    assert_eq!(std::fs::read_to_string(&dst).unwrap(), "original content");
+}
+
+#[test]
+fn cp_interactive_overwrites_on_yes() {
+    let scratch = Scratch::new();
+    let src = scratch.join("src.txt");
+    let dst = scratch.join("dst.txt");
+    std::fs::write(&src, "new content").unwrap();
+    std::fs::write(&dst, "original content").unwrap();
+
+    let out = run_with_stdin(
+        env!("CARGO_BIN_EXE_cp"),
+        &["-i", src.to_str().unwrap(), dst.to_str().unwrap()],
+        "y\n",
+    );
+    assert!(out.status.success());
+    assert_eq!(std::fs::read_to_string(&dst).unwrap(), "new content");
+}
+
+#[test]
+fn cp_dash_p_preserves_modification_time() {
+    let scratch = Scratch::new();
+    let src = scratch.join("src.txt");
+    let dst = scratch.join("dst.txt");
+    std::fs::write(&src, "x").unwrap();
+
+    // Backdate the source's mtime so a copy that *doesn't* preserve
+    // it (the non -p default) would produce a detectably different
+    // timestamp on the copy.
+    let backdated = std::time::SystemTime::now() - std::time::Duration::from_secs(3600);
+    std::fs::OpenOptions::new()
+        .write(true)
+        .open(&src)
+        .unwrap()
+        .set_modified(backdated)
+        .unwrap();
+
+    let out = run(env!("CARGO_BIN_EXE_cp"), &["-p", src.to_str().unwrap(), dst.to_str().unwrap()]);
+    assert!(out.status.success());
+
+    let src_mtime = std::fs::metadata(&src).unwrap().modified().unwrap();
+    let dst_mtime = std::fs::metadata(&dst).unwrap().modified().unwrap();
+    assert_eq!(src_mtime, dst_mtime);
 }

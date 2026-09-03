@@ -187,6 +187,46 @@ fn tr_dash_d_deletes_characters() {
 }
 
 #[test]
+fn head_dash_c_limits_output_to_byte_count() {
+    let input = "abcdefghij";
+    let out = run_with_stdin(env!("CARGO_BIN_EXE_head"), &["-c", "3"], input);
+    assert_eq!(stdout_of(&out), "abc");
+}
+
+#[test]
+fn tail_dash_c_returns_last_n_bytes_from_stdin() {
+    let input = "abcdefghij";
+    let out = run_with_stdin(env!("CARGO_BIN_EXE_tail"), &["-c", "3"], input);
+    assert_eq!(stdout_of(&out), "hij");
+}
+
+#[test]
+fn tail_dash_c_returns_last_n_bytes_from_a_file() {
+    let dir = std::env::temp_dir().join(format!("mitos-tail-c-test-{}", std::process::id()));
+    std::fs::create_dir_all(&dir).unwrap();
+    let file = dir.join("data.txt");
+    std::fs::write(&file, "abcdefghij").unwrap();
+
+    let out = run(env!("CARGO_BIN_EXE_tail"), &["-c", "4", file.to_str().unwrap()]);
+    assert_eq!(stdout_of(&out), "ghij");
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
+#[test]
+fn sort_dash_k_sorts_by_field() {
+    // Sort by the second colon-delimited field.
+    let input = "b:3\na:1\nc:2\n";
+    let out = run_with_stdin(env!("CARGO_BIN_EXE_sort"), &["-t", ":", "-k", "2"], input);
+    assert_eq!(stdout_of(&out), "a:1\nc:2\nb:3\n");
+}
+
+#[test]
+fn sort_dash_k_dash_n_sorts_by_field_numerically() {
+    let input = "x:10\ny:2\nz:1\n";
+    let out = run_with_stdin(env!("CARGO_BIN_EXE_sort"), &["-t", ":", "-k", "2", "-n"], input);
+    assert_eq!(stdout_of(&out), "z:1\ny:2\nx:10\n");
+}
+#[test]
 fn diff_identical_files_exits_zero_with_no_output() {
     let dir = std::env::temp_dir().join(format!("mitos-diff-test-{}", std::process::id()));
     std::fs::create_dir_all(&dir).unwrap();
