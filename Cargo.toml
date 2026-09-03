@@ -2,6 +2,10 @@
 name = "mitos-utils"
 version = "0.1.0"
 edition = "2021"
+# Minimum supported Rust version: chown.rs/chgrp.rs use
+# OsStr::as_encoded_bytes, stabilized in 1.74. Bump this deliberately
+# if that changes rather than letting it drift silently.
+rust-version = "1.74"
 authors = ["Shark <babor3331@gmail.com>"]
 description = "Core system utilities for MITOS"
 license = "MIT"
