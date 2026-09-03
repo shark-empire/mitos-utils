@@ -24,3 +24,4 @@
 
 pub mod applets;
 pub mod common;
+pub mod ipc;
