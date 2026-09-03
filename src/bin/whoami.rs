@@ -1,13 +1,4 @@
-//! `whoami` -- print the effective username of the current user.
-
-use mitos_utils::common::errors::{run, AppResult};
-use mitos_utils::common::users::current_identity;
-
 fn main() -> std::process::ExitCode {
-    run("whoami", real_main)
-}
-
-fn real_main() -> AppResult<()> {
-    println!("{}", current_identity().user);
-    Ok(())
+    let args: Vec<String> = std::env::args().skip(1).collect();
+    mitos_utils::common::errors::run("whoami", mitos_utils::applets::whoami::USAGE, args, mitos_utils::applets::whoami::run)
 }
