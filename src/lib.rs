@@ -22,4 +22,5 @@
 //! individual utilities never have to think about that plumbing.
 //! See docs/architecture.md for why the crate is organized this way.
 
+pub mod applets;
 pub mod common;
