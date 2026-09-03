@@ -17,10 +17,10 @@ readme = "README.md"
 # and every crate we *don't* depend on is one less thing that needs
 # to exist for that port. See docs/architecture.md.
 [dependencies]
-
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
-tokio = { version = "1.38", features = ["net", "io-util"] }
+# tokio is required for the async framing functions (ipc_send / ipc_recv)
+tokio = { version = "1.38", features = ["net", "io-util", "rt", "macros"] }
 
 
 [profile.release]
