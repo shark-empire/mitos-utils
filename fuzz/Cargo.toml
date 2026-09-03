@@ -1,0 +1,48 @@
+[package]
+name = "mitos-utils-fuzz"
+version = "0.0.0"
+publish = false
+edition = "2021"
+
+# The ONE place in this repository that isn't zero-dependency (see
+# docs/architecture.md). cargo-fuzz fundamentally requires
+# libfuzzer-sys; it lives here, isolated in its own workspace (the
+# [workspace] table below), so it never touches mitos-utils itself or
+# any of the ~50 shipped binaries -- `cargo build` at the repo root
+# never sees this Cargo.toml at all.
+[dependencies]
+libfuzzer-sys = "0.4"
+
+[dependencies.mitos-utils]
+path = ".."
+
+[[bin]]
+name = "printf_render"
+path = "fuzz_targets/printf_render.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "tr_translate"
+path = "fuzz_targets/tr_translate.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "cut_field_list"
+path = "fuzz_targets/cut_field_list.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "chmod_parse_mode"
+path = "fuzz_targets/chmod_parse_mode.rs"
+test = false
+doc = false
+bench = false
+
+[workspace]
+members = ["."]
