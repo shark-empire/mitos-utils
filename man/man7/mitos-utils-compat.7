@@ -1,0 +1,55 @@
+.TH MITOS-UTILS-COMPAT 7 "September 2026" "mitos-utils 0.1.0" "MITOS Miscellany"
+.SH NAME
+mitos\-utils\-compat \- POSIX/GNU compatibility scope of mitos\-utils
+.SH DESCRIPTION
+mitos\-utils implements the commonly\-used subset of POSIX/GNU
+coreutils behavior for each of its ~50 utilities, not full
+flag\-for\-flag parity. This page is a pointer, not the full
+reference: see
+.I docs/compatibility.md
+in the mitos\-utils source tree for the complete per\-utility table of
+what's supported and what's deliberately out of scope, and
+.I docs/architecture.md
+for why the project is organized this way.
+.SH THE SHORT VERSION
+.TP
+.B Binary safety
+The text utilities operate on UTF\-8 text line\-by\-line, not raw
+bytes; they are not binary\-safe the way GNU's versions are.
+.TP
+.B Locale
+C\-locale behavior only (byte\-order comparisons); no LC_COLLATE\-aware
+sorting or multi\-byte\-aware character counting.
+.TP
+.B Platform scope
+.BR chmod (1),
+.BR chown (1),
+.BR chgrp (1),
+.BR mount (1),
+.BR umount (1),
+.BR sync (1),
+.BR dmesg (1),
+and
+.BR kill (1)
+are unix\-only by construction.
+.BR ps (1),
+.BR free (1),
+.BR uptime (1),
+and
+.BR dmesg (1)
+additionally require Linux specifically (they read
+.IR /proc ).
+.TP
+.B FFI verification
+Hand\-written libc bindings for
+.BR statvfs (3),
+.BR mount (2),
+and
+.BR syslog (2)
+have been cross\-checked against current man pages; see
+.I docs/compatibility.md
+for exactly what has and hasn't been verified this way.
+.SH SEE ALSO
+.BR mitos\-box (1),
+.BR mitos\-utils\-security (7),
+.BR mitos\-utils\-integration (7)
