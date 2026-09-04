@@ -1,7 +1,8 @@
 //! `sync` -- flush filesystem buffers to disk via the `sync(2)`
 //! syscall.
 
-use crate::common::errors::{AppError, AppResult};
+use crate::common::errors::AppResult;
+
 
 #[cfg(unix)]
 mod ffi {
