@@ -2,24 +2,32 @@
 name = "mitos-utils"
 version = "0.1.0"
 edition = "2021"
-# Minimum supported Rust version: chown.rs/chgrp.rs use
-# OsStr::as_encoded_bytes, stabilized in 1.74. Bump this deliberately
-# if that changes rather than letting it drift silently.
-rust-version = "1.74"
-authors = ["Shark <babor3331@gmail.com>"]
-description = "Core system utilities for MITOS"
+authors = ["shark-empire"]
+description = "Shared contracts, MROP protocol, and IPC plumbing for the MITOS ecosystem"
 license = "MIT"
-readme = "README.md"
+repository = "https://github.com/shark-empire/mitos-utils"
 
-# mitos-utils intentionally has zero dependencies (including
-# dev-dependencies). It is meant to eventually be cross-compiled
-# against mitosOS's own target once the kernel exposes a hosted std,
-# and every crate we *don't* depend on is one less thing that needs
-# to exist for that port. See docs/architecture.md.
+[lib]
+name = "mitos_utils"
+path = "src/lib.rs"
+
+# NOTE: anything you drop into src/bin/ is auto-detected by Cargo as a
+# standalone binary (e.g. src/bin/ipc-ping.rs) — no extra config needed.
+
 [dependencies]
+# Serialization for IpcRequest / IpcResponse / RichWidget
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
 
-[profile.release]
-opt-level = "z"   # optimize for size: these ship on the target system's disk image
-lto = true
-strip = true
-panic = "abort"
+# Async Unix Domain Socket framing (ipc_send / ipc_recv over UnixStream)
+tokio = { version = "1.38", features = ["net", "io-util"] }
+
+# ── Optional: uncomment as src/common or src/applets grow ──────────────
+# dirs = "5.0"          # XDG home/config discovery
+# notify = "6.1"        # filesystem watching (theme/config hot-reload)
+# chrono = "0.4"        # timestamps for logs & execution blocks
+# thiserror = "1.0"     # ergonomic shared error types
+
+[dev-dependencies]
+# Full runtime + test utilities for integration tests of the IPC framing
+tokio = { version = "1.38", features = ["full", "test-util"] }
