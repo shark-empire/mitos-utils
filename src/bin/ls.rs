@@ -9,7 +9,7 @@ use std::os::unix::fs::PermissionsExt;
 
 fn main() {
     let args: Vec<String> = env::args().skip(1).collect();
-    
+
     let mut show_hidden = false;
     let mut long_format = false;
     let mut recursive = false;
@@ -49,11 +49,14 @@ fn main() {
 
     for path in paths {
         if !path.exists() {
-            eprintln!("ls: cannot access '{}': No such file or directory", path.display());
+            eprintln!(
+                "ls: cannot access '{}': No such file or directory",
+                path.display()
+            );
             exit_code = 2; // GNU ls standard exit code for missing files
             continue;
         }
-        
+
         if path.is_file() {
             if let Err(e) = print_file(&path, long_format, human_readable) {
                 eprintln!("ls: {}: {}", path.display(), e);
@@ -64,12 +67,12 @@ fn main() {
                 println!("{}:", path.display());
             }
             if let Err(e) = list_dir(
-                &path, 
-                show_hidden, 
-                long_format, 
-                recursive, 
-                sort_by_size, 
-                reverse_sort, 
+                &path,
+                show_hidden,
+                long_format,
+                recursive,
+                sort_by_size,
+                reverse_sort,
                 human_readable,
             ) {
                 eprintln!("ls: {}: {}", path.display(), e);
@@ -103,7 +106,7 @@ fn list_dir(
         entries.sort_by(|a, b| {
             let size_a = a.metadata().map(|m| m.len()).unwrap_or(0);
             let size_b = b.metadata().map(|m| m.len()).unwrap_or(0);
-            size_b.cmp(&size_a) 
+            size_b.cmp(&size_a)
         });
     } else {
         entries.sort_by(|a, b| a.file_name().cmp(&b.file_name()));
@@ -124,11 +127,12 @@ fn list_dir(
 
     // Handle -R (Recursive)
     if recursive {
-        let mut subdirs: Vec<PathBuf> = entries.iter()
+        let mut subdirs: Vec<PathBuf> = entries
+            .iter()
             .map(|e| e.path())
             .filter(|p| p.is_dir() && !p.ends_with(".") && !p.ends_with(".."))
             .collect();
-            
+
         // Maintain the sorted order for subdirectories
         if reverse_sort && !sort_by_size {
             subdirs.reverse();
@@ -137,12 +141,12 @@ fn list_dir(
         for subdir in subdirs {
             println!("\n{}:", subdir.display());
             if let Err(e) = list_dir(
-                &subdir, 
-                show_hidden, 
-                long_format, 
-                recursive, 
-                sort_by_size, 
-                reverse_sort, 
+                &subdir,
+                show_hidden,
+                long_format,
+                recursive,
+                sort_by_size,
+                reverse_sort,
                 human_readable,
             ) {
                 eprintln!("ls: {}: {}", subdir.display(), e);
@@ -157,13 +161,17 @@ fn print_file(path: &Path, long_format: bool, human_readable: bool) -> io::Resul
     if long_format {
         let metadata = fs::symlink_metadata(path)?;
         let size = metadata.len();
-        let size_str = if human_readable { human_size(size) } else { size.to_string() };
-        
+        let size_str = if human_readable {
+            human_size(size)
+        } else {
+            size.to_string()
+        };
+
         #[cfg(unix)]
         let perms = format_permissions(metadata.permissions().mode());
         #[cfg(not(unix))]
         let perms = "----------".to_string();
-        
+
         let name = path.file_name().unwrap_or_default().to_string_lossy();
         // Simplified long format: permissions, links, user, group, size, name
         println!("{} 1 user group {:>8} {}", perms, size_str, name);
@@ -177,14 +185,26 @@ fn print_file(path: &Path, long_format: bool, human_readable: bool) -> io::Resul
 fn format_permissions(mode: u32) -> String {
     let mut s = String::with_capacity(10);
     let file_type = mode & 0o170000;
-    s.push(if file_type == 0o040000 { 'd' } else if file_type == 0o120000 { 'l' } else { '-' });
-    
+    s.push(if file_type == 0o040000 {
+        'd'
+    } else if file_type == 0o120000 {
+        'l'
+    } else {
+        '-'
+    });
+
     let bits = [
-        (0o400, 'r'), (0o200, 'w'), (0o100, 'x'),
-        (0o040, 'r'), (0o020, 'w'), (0o010, 'x'),
-        (0o004, 'r'), (0o002, 'w'), (0o001, 'x'),
+        (0o400, 'r'),
+        (0o200, 'w'),
+        (0o100, 'x'),
+        (0o040, 'r'),
+        (0o020, 'w'),
+        (0o010, 'x'),
+        (0o004, 'r'),
+        (0o002, 'w'),
+        (0o001, 'x'),
     ];
-    
+
     for (bit, c) in bits {
         s.push(if mode & bit != 0 { c } else { '-' });
     }
