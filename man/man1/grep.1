@@ -1,0 +1,28 @@
+.TH GREP 1 "September 2026" "mitos-utils 0.1.0" "MITOS User Commands"
+.SH NAME
+grep \- print lines matching a pattern
+.SH SYNOPSIS
+.B grep
+[\fB\-i\fR] [\fB\-v\fR] [\fB\-n\fR] \fIPATTERN\fR [\fIFILE\fR...]
+.SH DESCRIPTION
+Print each line of FILE (standard input by default) that contains a match for the literal substring PATTERN.
+.SH OPTIONS
+.TP
+.B \-i
+Ignore case distinctions.
+.TP
+.B \-v
+Invert the match: print non-matching lines.
+.TP
+.B \-n
+Prefix each printed line with its line number.
+.SH GLOBAL OPTIONS
+Every mitos-utils command additionally accepts \fB\-\-help\fR (print a usage line and exit) and \fB\-\-version\fR. Commands that take file/path arguments also accept \fB\-\-\fR to mark the end of options, so a file literally named e.g. \fB\-oddfile\fR can still be referenced.
+.SH NOTES
+PATTERN is matched as a literal substring, not a regular expression -- closer to \fBgrep \-F\fR(1). See mitos-utils-compat(7).
+.SH EXIT STATUS
+0 if any line matched, 1 if no line matched, 2 on a usage or file error.
+.SH SEE ALSO
+.BR mitos\-box (1),
+.BR mitos\-utils\-compat (7),
+.BR mitos\-utils\-integration (7)

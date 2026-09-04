@@ -1,0 +1,35 @@
+.TH MITOS-BOX 1 "September 2026" "mitos-utils 0.1.0" "MITOS User Commands"
+.SH NAME
+mitos\-box \- run any mitos\-utils applet from a single binary
+.SH SYNOPSIS
+.B mitos\-box
+\fIAPPLET\fR [\fIARGUMENT\fR...]
+.SH DESCRIPTION
+mitos\-box hosts every mitos\-utils applet (see mitos\-utils\-compat(7)
+for the full list) in one binary, busybox/toybox\-style, so a mitosOS
+install can carry one binary plus symlinks instead of a separate copy
+of the runtime per utility.
+.PP
+Invoked as a symlink or hardlink named after an applet (e.g.
+.B ln \-s mitos\-box cat
+then running
+.BR ./cat ),
+mitos\-box reads
+.B argv[0]
+and dispatches straight to that applet, exactly as if the standalone
+binary had been run.
+.PP
+Invoked directly with the applet name as the first argument
+(\fBmitos\-box ls \-la\fR), it dispatches the same way without
+needing a symlink. With no arguments, or an unrecognized applet name,
+it lists every available applet.
+.SH EXIT STATUS
+Same as the dispatched applet. 2 if the requested applet name isn't
+recognized. 1 if argv[0] couldn't be determined at all.
+.SH SEE ALSO
+See each applet's own man page (e.g.
+.BR cat (1),
+.BR ls (1))
+for its specific options; they apply identically whether run standalone
+or through mitos\-box.
+.BR mitos\-utils\-integration (7)

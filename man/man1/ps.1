@@ -1,0 +1,17 @@
+.TH PS 1 "September 2026" "mitos-utils 0.1.0" "MITOS User Commands"
+.SH NAME
+ps \- report process status
+.SH SYNOPSIS
+.B ps
+.SH DESCRIPTION
+List running processes: PID, state, and command name.
+.SH GLOBAL OPTIONS
+Every mitos-utils command additionally accepts \fB\-\-help\fR (print a usage line and exit) and \fB\-\-version\fR. Commands that take file/path arguments also accept \fB\-\-\fR to mark the end of options, so a file literally named e.g. \fB\-oddfile\fR can still be referenced.
+.SH NOTES
+Reads Linux's /proc; on any other target this returns a clear "not available on this target" error rather than guessing or returning zeroes -- mitosOS does not expose an equivalent interface yet, see mitos-utils-integration(7).
+.SH EXIT STATUS
+0 on success, 1 if /proc could not be read or is unavailable.
+.SH SEE ALSO
+.BR mitos\-box (1),
+.BR mitos\-utils\-compat (7),
+.BR mitos\-utils\-integration (7)

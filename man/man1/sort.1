@@ -1,0 +1,32 @@
+.TH SORT 1 "September 2026" "mitos-utils 0.1.0" "MITOS User Commands"
+.SH NAME
+sort \- sort lines of text
+.SH SYNOPSIS
+.B sort
+[\fB\-r\fR] [\fB\-n\fR] [\fB\-u\fR] [\fB\-k\fR \fIN\fR] [\fB\-t\fR \fIDELIM\fR] [\fIFILE\fR...]
+.SH DESCRIPTION
+Sort the concatenated lines of FILE(s) (or standard input) and write the result to standard output.
+.SH OPTIONS
+.TP
+.B \-r
+Reverse the sort order.
+.TP
+.B \-n
+Compare according to numeric value.
+.TP
+.B \-u
+Output only the first of each run of equal lines.
+.TP
+.B \-k \fIN\fR
+Sort by field N (1-indexed) instead of the whole line. A single field only, not an \fIN\fR,\fIM\fR range.
+.TP
+.B \-t \fIDELIM\fR
+Field delimiter for \fB\-k\fR (default: any whitespace run).
+.SH GLOBAL OPTIONS
+Every mitos-utils command additionally accepts \fB\-\-help\fR (print a usage line and exit) and \fB\-\-version\fR. Commands that take file/path arguments also accept \fB\-\-\fR to mark the end of options, so a file literally named e.g. \fB\-oddfile\fR can still be referenced.
+.SH EXIT STATUS
+0 on success, 1 on a general failure (a listed file could not be processed, etc.), 2 on a usage error (missing or invalid arguments).
+.SH SEE ALSO
+.BR mitos\-box (1),
+.BR mitos\-utils\-compat (7),
+.BR mitos\-utils\-integration (7)

@@ -1,0 +1,25 @@
+.TH CUT 1 "September 2026" "mitos-utils 0.1.0" "MITOS User Commands"
+.SH NAME
+cut \- remove sections from each line
+.SH SYNOPSIS
+.B cut
+\fB\-d\fR \fIDELIM\fR \fB\-f\fR \fILIST\fR [\fIFILE\fR...]
+.SH DESCRIPTION
+Print selected, delimiter-separated fields from each line of FILE (standard input by default).
+.SH OPTIONS
+.TP
+.B \-d \fIDELIM\fR
+Use DELIM as the field delimiter (default: tab).
+.TP
+.B \-f \fILIST\fR
+Comma-separated field numbers and ranges, e.g. \fB1,3\-5\fR.
+.SH GLOBAL OPTIONS
+Every mitos-utils command additionally accepts \fB\-\-help\fR (print a usage line and exit) and \fB\-\-version\fR. Commands that take file/path arguments also accept \fB\-\-\fR to mark the end of options, so a file literally named e.g. \fB\-oddfile\fR can still be referenced.
+.SH NOTES
+Field selection is by delimiter only -- \fB\-c\fR (character ranges) and \fB\-b\fR (byte ranges) are not supported.
+.SH EXIT STATUS
+0 on success, 2 on a usage error.
+.SH SEE ALSO
+.BR mitos\-box (1),
+.BR mitos\-utils\-compat (7),
+.BR mitos\-utils\-integration (7)

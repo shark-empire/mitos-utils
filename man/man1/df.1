@@ -1,0 +1,18 @@
+.TH DF 1 "September 2026" "mitos-utils 0.1.0" "MITOS User Commands"
+.SH NAME
+df \- report file system disk space usage
+.SH SYNOPSIS
+.B df
+[\fIPATH\fR...]
+.SH DESCRIPTION
+Report size, used, and available space for the filesystem containing each PATH (the current directory by default).
+.SH GLOBAL OPTIONS
+Every mitos-utils command additionally accepts \fB\-\-help\fR (print a usage line and exit) and \fB\-\-version\fR. Commands that take file/path arguments also accept \fB\-\-\fR to mark the end of options, so a file literally named e.g. \fB\-oddfile\fR can still be referenced.
+.SH NOTES
+Linux only, via statvfs(2); the "Filesystem" source-device column is not populated (statvfs doesn't expose the device name). See mitos-utils-compat(7) for the FFI verification notes.
+.SH EXIT STATUS
+0 on success, 1 if any PATH's filesystem info could not be read.
+.SH SEE ALSO
+.BR mitos\-box (1),
+.BR mitos\-utils\-compat (7),
+.BR mitos\-utils\-integration (7)

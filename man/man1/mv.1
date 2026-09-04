@@ -1,0 +1,20 @@
+.TH MV 1 "September 2026" "mitos-utils 0.1.0" "MITOS User Commands"
+.SH NAME
+mv \- move (rename) files
+.SH SYNOPSIS
+.B mv
+[\fB\-i\fR] [\fB\-\-\fR] \fISOURCE\fR... \fIDEST\fR
+.SH DESCRIPTION
+Rename SOURCE to DEST, or move SOURCE(s) into an existing directory DEST. Falls back to a copy-then-delete when the rename crosses a filesystem boundary, preserving modification time in that fallback.
+.SH OPTIONS
+.TP
+.B \-i, \-\-interactive
+Prompt before overwriting an existing destination.
+.SH GLOBAL OPTIONS
+Every mitos-utils command additionally accepts \fB\-\-help\fR (print a usage line and exit) and \fB\-\-version\fR. Commands that take file/path arguments also accept \fB\-\-\fR to mark the end of options, so a file literally named e.g. \fB\-oddfile\fR can still be referenced.
+.SH EXIT STATUS
+0 on success, 1 on a general failure (a listed file could not be processed, etc.), 2 on a usage error (missing or invalid arguments).
+.SH SEE ALSO
+.BR mitos\-box (1),
+.BR mitos\-utils\-compat (7),
+.BR mitos\-utils\-integration (7)

@@ -1,0 +1,22 @@
+.TH CHOWN 1 "September 2026" "mitos-utils 0.1.0" "MITOS User Commands"
+.SH NAME
+chown \- change file owner and group
+.SH SYNOPSIS
+.B chown
+[\fB\-R\fR] [\fB\-\-\fR] \fIOWNER\fR[\fB:\fR\fIGROUP\fR] \fIFILE\fR...
+.SH DESCRIPTION
+Change the owner (and optionally group, via \fBOWNER:GROUP\fR) of each FILE. Owner/group are resolved by name via the host's passwd/group database.
+.SH OPTIONS
+.TP
+.B \-R, \-\-recursive
+Change files and directories recursively.
+.SH GLOBAL OPTIONS
+Every mitos-utils command additionally accepts \fB\-\-help\fR (print a usage line and exit) and \fB\-\-version\fR. Commands that take file/path arguments also accept \fB\-\-\fR to mark the end of options, so a file literally named e.g. \fB\-oddfile\fR can still be referenced.
+.SH NOTES
+With \fB\-R\fR on Linux, traversal is TOCTOU-hardened (common::safewalk). A numeric uid:gid without a matching passwd/group entry is not supported.
+.SH EXIT STATUS
+0 on success, 1 on a general failure (a listed file could not be processed, etc.), 2 on a usage error (missing or invalid arguments).
+.SH SEE ALSO
+.BR mitos\-box (1),
+.BR mitos\-utils\-compat (7),
+.BR mitos\-utils\-integration (7)

@@ -1,0 +1,32 @@
+.TH KILL 1 "September 2026" "mitos-utils 0.1.0" "MITOS User Commands"
+.SH NAME
+kill \- send a signal to a process
+.SH SYNOPSIS
+.B kill
+[\fB\-SIGNAL\fR] \fIPID\fR...
+.SH DESCRIPTION
+Send a signal (SIGTERM by default) to each PID.
+.SH OPTIONS
+.TP
+.B \-9, \-KILL
+Send SIGKILL.
+.TP
+.B \-15, \-TERM
+Send SIGTERM (the default).
+.TP
+.B \-1, \-HUP
+Send SIGHUP.
+.TP
+.B \-2, \-INT
+Send SIGINT.
+.TP
+.B \-\fIN\fR
+Send an arbitrary signal number N.
+.SH GLOBAL OPTIONS
+Every mitos-utils command additionally accepts \fB\-\-help\fR (print a usage line and exit) and \fB\-\-version\fR. Commands that take file/path arguments also accept \fB\-\-\fR to mark the end of options, so a file literally named e.g. \fB\-oddfile\fR can still be referenced.
+.SH EXIT STATUS
+0 on success, 1 if a signal could not be delivered, 2 on a usage error.
+.SH SEE ALSO
+.BR mitos\-box (1),
+.BR mitos\-utils\-compat (7),
+.BR mitos\-utils\-integration (7)

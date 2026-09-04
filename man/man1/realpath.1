@@ -1,0 +1,16 @@
+.TH REALPATH 1 "September 2026" "mitos-utils 0.1.0" "MITOS User Commands"
+.SH NAME
+realpath \- print the resolved absolute path
+.SH SYNOPSIS
+.B realpath
+\fIPATH\fR...
+.SH DESCRIPTION
+Resolve each PATH to an absolute, symlink-free form. Falls back to purely lexical \fB.\fR/\fB..\fR resolution (not requiring the path to exist) when the path can't be canonicalized, matching GNU \fBrealpath \-m\fR.
+.SH GLOBAL OPTIONS
+Every mitos-utils command additionally accepts \fB\-\-help\fR (print a usage line and exit) and \fB\-\-version\fR. Commands that take file/path arguments also accept \fB\-\-\fR to mark the end of options, so a file literally named e.g. \fB\-oddfile\fR can still be referenced.
+.SH EXIT STATUS
+0 on success, 2 if no PATH is given.
+.SH SEE ALSO
+.BR mitos\-box (1),
+.BR mitos\-utils\-compat (7),
+.BR mitos\-utils\-integration (7)

@@ -1,0 +1,18 @@
+.TH PRINTF 1 "September 2026" "mitos-utils 0.1.0" "MITOS User Commands"
+.SH NAME
+printf \- format and print data
+.SH SYNOPSIS
+.B printf
+\fIFORMAT\fR [\fIARGUMENT\fR...]
+.SH DESCRIPTION
+Print FORMAT with each ARGUMENT substituted for the next \fB%s\fR/\fB%d\fR/\fB%x\fR conversion, and \fB\\n\fR/\fB\\t\fR/\fB\\\\\fR escapes expanded. Supports \fB%%\fR for a literal percent sign.
+.SH GLOBAL OPTIONS
+Every mitos-utils command additionally accepts \fB\-\-help\fR (print a usage line and exit) and \fB\-\-version\fR. Commands that take file/path arguments also accept \fB\-\-\fR to mark the end of options, so a file literally named e.g. \fB\-oddfile\fR can still be referenced.
+.SH NOTES
+Width/precision specifiers (e.g. \fB%5d\fR) and \fB%f\fR are not supported -- see mitos-utils-compat(7).
+.SH EXIT STATUS
+0 on success, 2 if FORMAT is missing.
+.SH SEE ALSO
+.BR mitos\-box (1),
+.BR mitos\-utils\-compat (7),
+.BR mitos\-utils\-integration (7)

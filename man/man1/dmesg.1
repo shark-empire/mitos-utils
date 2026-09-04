@@ -1,0 +1,17 @@
+.TH DMESG 1 "September 2026" "mitos-utils 0.1.0" "MITOS User Commands"
+.SH NAME
+dmesg \- print the kernel ring buffer
+.SH SYNOPSIS
+.B dmesg
+.SH DESCRIPTION
+Print the kernel ring buffer.
+.SH GLOBAL OPTIONS
+Every mitos-utils command additionally accepts \fB\-\-help\fR (print a usage line and exit) and \fB\-\-version\fR. Commands that take file/path arguments also accept \fB\-\-\fR to mark the end of options, so a file literally named e.g. \fB\-oddfile\fR can still be referenced.
+.SH NOTES
+Linux only, via klogctl(2). Needs /proc/sys/kernel/dmesg_restrict set to 0 (or CAP_SYSLOG) on modern kernels -- a permission error here is expected sandboxed behavior, not a bug. mitosOS has no kernel log syscall exposed to userspace yet.
+.SH EXIT STATUS
+0 on success, 1 if the kernel log could not be read.
+.SH SEE ALSO
+.BR mitos\-box (1),
+.BR mitos\-utils\-compat (7),
+.BR mitos\-utils\-integration (7)

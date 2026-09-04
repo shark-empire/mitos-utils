@@ -1,0 +1,23 @@
+.TH LN 1 "September 2026" "mitos-utils 0.1.0" "MITOS User Commands"
+.SH NAME
+ln \- make links between files
+.SH SYNOPSIS
+.B ln
+[\fB\-s\fR] [\fB\-f\fR] \fITARGET\fR \fILINK_NAME\fR
+.SH DESCRIPTION
+Create a link named LINK_NAME to TARGET. Hard links by default; \fB\-s\fR makes a symbolic link instead.
+.SH OPTIONS
+.TP
+.B \-s, \-\-symbolic
+Make a symbolic link instead of a hard link.
+.TP
+.B \-f, \-\-force
+Remove an existing LINK_NAME before linking.
+.SH GLOBAL OPTIONS
+Every mitos-utils command additionally accepts \fB\-\-help\fR (print a usage line and exit) and \fB\-\-version\fR. Commands that take file/path arguments also accept \fB\-\-\fR to mark the end of options, so a file literally named e.g. \fB\-oddfile\fR can still be referenced.
+.SH EXIT STATUS
+0 on success, 1 on a general failure (a listed file could not be processed, etc.), 2 on a usage error (missing or invalid arguments).
+.SH SEE ALSO
+.BR mitos\-box (1),
+.BR mitos\-utils\-compat (7),
+.BR mitos\-utils\-integration (7)

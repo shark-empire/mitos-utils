@@ -1,0 +1,16 @@
+.TH DIRNAME 1 "September 2026" "mitos-utils 0.1.0" "MITOS User Commands"
+.SH NAME
+dirname \- strip last component from a file name
+.SH SYNOPSIS
+.B dirname
+\fIPATH\fR...
+.SH DESCRIPTION
+Print each PATH with its last non-slash component and trailing slashes removed; if PATH contains no slashes, print \fB.\fR
+.SH GLOBAL OPTIONS
+Every mitos-utils command additionally accepts \fB\-\-help\fR (print a usage line and exit) and \fB\-\-version\fR. Commands that take file/path arguments also accept \fB\-\-\fR to mark the end of options, so a file literally named e.g. \fB\-oddfile\fR can still be referenced.
+.SH EXIT STATUS
+0 on success, 2 if no PATH is given.
+.SH SEE ALSO
+.BR mitos\-box (1),
+.BR mitos\-utils\-compat (7),
+.BR mitos\-utils\-integration (7)

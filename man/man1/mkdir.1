@@ -1,0 +1,20 @@
+.TH MKDIR 1 "September 2026" "mitos-utils 0.1.0" "MITOS User Commands"
+.SH NAME
+mkdir \- create directories
+.SH SYNOPSIS
+.B mkdir
+[\fB\-p\fR] [\fB\-\-\fR] \fIDIR\fR...
+.SH DESCRIPTION
+Create the DIRECTORY(ies), if they do not already exist.
+.SH OPTIONS
+.TP
+.B \-p, \-\-parents
+Create parent directories as needed; no error if a directory already exists.
+.SH GLOBAL OPTIONS
+Every mitos-utils command additionally accepts \fB\-\-help\fR (print a usage line and exit) and \fB\-\-version\fR. Commands that take file/path arguments also accept \fB\-\-\fR to mark the end of options, so a file literally named e.g. \fB\-oddfile\fR can still be referenced.
+.SH EXIT STATUS
+0 on success, 1 on a general failure (a listed file could not be processed, etc.), 2 on a usage error (missing or invalid arguments).
+.SH SEE ALSO
+.BR mitos\-box (1),
+.BR mitos\-utils\-compat (7),
+.BR mitos\-utils\-integration (7)

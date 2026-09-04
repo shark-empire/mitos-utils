@@ -1,0 +1,37 @@
+.TH LS 1 "September 2026" "mitos-utils 0.1.0" "MITOS User Commands"
+.SH NAME
+ls \- list directory contents
+.SH SYNOPSIS
+.B ls
+[\fB\-alhRtS\fR] [\fB\-\-\fR] [\fIPATH\fR...]
+.SH DESCRIPTION
+List information about the PATH(s) (the current directory by default). Sorts alphabetically unless \fB\-t\fR or \fB\-S\fR is given.
+.SH OPTIONS
+.TP
+.B \-a
+Do not hide entries starting with \fB.\fR
+.TP
+.B \-l
+Use a long listing format (mode, links, owner, group, size, name).
+.TP
+.B \-h
+With \fB\-l\fR, print sizes in human-readable form (e.g. 1.2K, 3.4M).
+.TP
+.B \-R
+List subdirectories recursively.
+.TP
+.B \-t
+Sort by modification time, newest first.
+.TP
+.B \-S
+Sort by file size, largest first.
+.SH GLOBAL OPTIONS
+Every mitos-utils command additionally accepts \fB\-\-help\fR (print a usage line and exit) and \fB\-\-version\fR. Commands that take file/path arguments also accept \fB\-\-\fR to mark the end of options, so a file literally named e.g. \fB\-oddfile\fR can still be referenced.
+.SH NOTES
+Owner/group names are resolved via the host's passwd/group database (common::users) -- see mitos-utils-integration(7).
+.SH EXIT STATUS
+0 on success, 1 on a general failure (a listed file could not be processed, etc.), 2 on a usage error (missing or invalid arguments).
+.SH SEE ALSO
+.BR mitos\-box (1),
+.BR mitos\-utils\-compat (7),
+.BR mitos\-utils\-integration (7)

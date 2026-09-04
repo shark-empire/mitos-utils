@@ -1,0 +1,25 @@
+.TH TAIL 1 "September 2026" "mitos-utils 0.1.0" "MITOS User Commands"
+.SH NAME
+tail \- output the last part of files
+.SH SYNOPSIS
+.B tail
+[\fB\-n\fR \fIN\fR|\fB\-c\fR \fIN\fR] [\fIFILE\fR...]
+.SH DESCRIPTION
+Print the last 10 lines of each FILE to standard output; with more than one FILE, precede each with a header giving its name.
+.SH OPTIONS
+.TP
+.B \-n \fIN\fR
+Print the last N lines instead of 10.
+.TP
+.B \-c \fIN\fR
+Print the last N bytes instead (binary-safe; seeks directly on regular files rather than buffering).
+.SH GLOBAL OPTIONS
+Every mitos-utils command additionally accepts \fB\-\-help\fR (print a usage line and exit) and \fB\-\-version\fR. Commands that take file/path arguments also accept \fB\-\-\fR to mark the end of options, so a file literally named e.g. \fB\-oddfile\fR can still be referenced.
+.SH NOTES
+\fB\-f\fR (follow) is not supported.
+.SH EXIT STATUS
+0 on success, 1 on a general failure (a listed file could not be processed, etc.), 2 on a usage error (missing or invalid arguments).
+.SH SEE ALSO
+.BR mitos\-box (1),
+.BR mitos\-utils\-compat (7),
+.BR mitos\-utils\-integration (7)

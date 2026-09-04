@@ -1,0 +1,16 @@
+.TH DIFF 1 "September 2026" "mitos-utils 0.1.0" "MITOS User Commands"
+.SH NAME
+diff \- compare files line by line
+.SH SYNOPSIS
+.B diff
+\fIFILE1\fR \fIFILE2\fR
+.SH DESCRIPTION
+Compare FILE1 and FILE2 line by line and report differences in a minimal unified-style output. This is a simple line-by-line comparison, not a full LCS-based diff, and can over-report changes for interleaved edits -- see mitos-utils-compat(7).
+.SH GLOBAL OPTIONS
+Every mitos-utils command additionally accepts \fB\-\-help\fR (print a usage line and exit) and \fB\-\-version\fR. Commands that take file/path arguments also accept \fB\-\-\fR to mark the end of options, so a file literally named e.g. \fB\-oddfile\fR can still be referenced.
+.SH EXIT STATUS
+0 if the files are identical, 1 if they differ, 2 if either file could not be read.
+.SH SEE ALSO
+.BR mitos\-box (1),
+.BR mitos\-utils\-compat (7),
+.BR mitos\-utils\-integration (7)

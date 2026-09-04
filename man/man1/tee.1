@@ -1,0 +1,20 @@
+.TH TEE 1 "September 2026" "mitos-utils 0.1.0" "MITOS User Commands"
+.SH NAME
+tee \- read from standard input and write to standard output and files
+.SH SYNOPSIS
+.B tee
+[\fB\-a\fR] \fIFILE\fR...
+.SH DESCRIPTION
+Copy standard input to standard output and to each FILE.
+.SH OPTIONS
+.TP
+.B \-a, \-\-append
+Append to FILE(s) instead of overwriting them.
+.SH GLOBAL OPTIONS
+Every mitos-utils command additionally accepts \fB\-\-help\fR (print a usage line and exit) and \fB\-\-version\fR. Commands that take file/path arguments also accept \fB\-\-\fR to mark the end of options, so a file literally named e.g. \fB\-oddfile\fR can still be referenced.
+.SH EXIT STATUS
+0 on success, 2 if a FILE could not be opened.
+.SH SEE ALSO
+.BR mitos\-box (1),
+.BR mitos\-utils\-compat (7),
+.BR mitos\-utils\-integration (7)

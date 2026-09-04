@@ -1,0 +1,18 @@
+.TH MOUNT 1 "September 2026" "mitos-utils 0.1.0" "MITOS User Commands"
+.SH NAME
+mount \- mount a filesystem, or list mounted filesystems
+.SH SYNOPSIS
+.B mount
+\fISOURCE\fR \fITARGET\fR \fB\-t\fR \fIFSTYPE\fR
+.SH DESCRIPTION
+With no arguments, list currently mounted filesystems (reads Linux's /proc/mounts). With SOURCE, TARGET, and \fB\-t\fR FSTYPE, attempt a real mount(2) call.
+.SH GLOBAL OPTIONS
+Every mitos-utils command additionally accepts \fB\-\-help\fR (print a usage line and exit) and \fB\-\-version\fR. Commands that take file/path arguments also accept \fB\-\-\fR to mark the end of options, so a file literally named e.g. \fB\-oddfile\fR can still be referenced.
+.SH NOTES
+mitosOS has no mount table exposed to userspace yet.
+.SH EXIT STATUS
+0 on success, 1 if the mount table or mount(2) call failed.
+.SH SEE ALSO
+.BR mitos\-box (1),
+.BR mitos\-utils\-compat (7),
+.BR mitos\-utils\-integration (7)
