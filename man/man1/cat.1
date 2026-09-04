@@ -1,0 +1,23 @@
+.TH CAT 1 "September 2026" "mitos-utils 0.1.0" "MITOS User Commands"
+.SH NAME
+cat \- concatenate files to standard output
+.SH SYNOPSIS
+.B cat
+[\fB\-n\fR|\fB\-b\fR] [\fB\-\-\fR] [\fIFILE\fR...]
+.SH DESCRIPTION
+Concatenate FILE(s) to standard output. With no FILE, or when FILE is \fB\-\fR, read standard input. Operates line-by-line on UTF-8 text; not binary-safe (see mitos-utils-compat(7)).
+.SH OPTIONS
+.TP
+.B \-n, \-\-number
+Number all output lines, starting at 1.
+.TP
+.B \-b, \-\-number\-nonblank
+Number nonempty output lines only; overrides \fB\-n\fR.
+.SH GLOBAL OPTIONS
+Every mitos-utils command additionally accepts \fB\-\-help\fR (print a usage line and exit) and \fB\-\-version\fR. Commands that take file/path arguments also accept \fB\-\-\fR to mark the end of options, so a file literally named e.g. \fB\-oddfile\fR can still be referenced.
+.SH EXIT STATUS
+0 on success, 1 on a general failure (a listed file could not be processed, etc.), 2 on a usage error (missing or invalid arguments).
+.SH SEE ALSO
+.BR mitos\-box (1),
+.BR mitos\-utils\-compat (7),
+.BR mitos\-utils\-integration (7)
