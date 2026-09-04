@@ -1,0 +1,40 @@
+.TH MITOS-UTILS-INTEGRATION 7 "September 2026" "mitos-utils 0.1.0" "MITOS Miscellany"
+.SH NAME
+mitos\-utils\-integration \- using mitos\-utils from other MITOS projects
+.SH DESCRIPTION
+mitos\-utils is usable two ways by another MITOS crate: as an
+\fBin\-process library\fR (call a function, no subprocess involved) or
+as \fBstandalone executables\fR invoked as subprocesses. Every
+applet's logic is a plain function,
+.IR "mitos_utils::applets::<name>::run(args)" ,
+and each standalone binary under
+.I src/bin/
+is a five\-line wrapper around that exact same function \(em see
+.BR mitos\-box (1)
+for the single\-binary\-many\-names variant of the same idea.
+.PP
+The in\-process route matters today specifically because mitosOS
+doesn't have \fBfork\fR/\fBexec\fR yet: linking mitos\-utils in and
+calling straight into
+.I applets::*
+is currently the only way a sibling hosted\-std MITOS project (such
+as mitos\-shell) can use this crate's logic at all.
+.PP
+The full function\-by\-function API reference \(em every
+.I common::
+and
+.I applets::
+item, its signature, and what it's for \(em lives in
+.I docs/integration.md
+in the mitos\-utils source tree, along with the subprocess contract
+(exit codes, stdout/stderr conventions, environment variables) for
+once mitosOS can actually spawn processes, and the consolidated list
+of what the kernel still needs to expose (\fBfork\fR/\fBexec\fR, a
+.I /proc\-like
+pseudo\-filesystem,
+.BR statvfs (2),
+a mount table, a kernel log read syscall, a passwd/group database).
+.SH SEE ALSO
+.BR mitos\-box (1),
+.BR mitos\-utils\-compat (7),
+.BR mitos\-utils\-security (7)

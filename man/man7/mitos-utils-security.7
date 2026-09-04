@@ -1,0 +1,52 @@
+.TH MITOS-UTILS-SECURITY 7 "September 2026" "mitos-utils 0.1.0" "MITOS Miscellany"
+.SH NAME
+mitos\-utils\-security \- TOCTOU hardening in mitos\-utils' recursive operations
+.SH DESCRIPTION
+.BR rm (1)
+\fB\-r\fR,
+.BR chmod (1)
+\fB\-R\fR, and
+.BR chown (1) / chgrp (1)
+\fB\-R\fR recurse through a directory tree and act on what they find.
+The risk: something can change \fIbetween\fR checking an entry and
+acting on it \(em e.g. swapping a directory for a symlink
+mid\-traversal, redirecting a delete or permission change somewhere
+never intended, potentially outside the tree entirely.
+.PP
+On Linux, these operations are hardened against exactly that via
+.I common::safewalk
+in the mitos\-utils source tree, using a check\-open\-verify pattern:
+stat an entry without following symlinks, open it, then verify the
+\fIopened file descriptor\fR still matches what was just checked
+(refusing if not) \(em rather than trusting a re\-resolved path string
+at each step.
+.PP
+This deliberately avoids
+.B O_DIRECTORY
+and
+.B O_NOFOLLOW
+as the mechanism, because those two flags' numeric values differ
+between the x86_64 and arm64 Linux kernel uapi headers (arm64 keeps
+the legacy 32\-bit ARM numbering for AArch32\-compat reasons) \(em
+confirmed against a real 2024 QEMU bug report where
+.B O_NOFOLLOW
+was silently mistranslated to
+.B O_LARGEFILE
+under cross\-architecture emulation. Since mitosOS targets both
+x86_64 and aarch64, hand\-rolling the wrong value would have silently
+defeated the protection on one architecture with no build error to
+catch it. See
+.I src/common/safewalk.rs
+in the mitos\-utils source tree for the full design writeup.
+.SH SCOPE
+This hardening is Linux\-only. Other targets fall back to a plain
+path\-based recursive walk with no symlink\-race protection. This is a
+deliberate scope decision, not a struct\-layout risk like some of this
+crate's other FFI \(em see
+.BR mitos\-utils\-compat (7).
+.SH SEE ALSO
+.BR rm (1),
+.BR chmod (1),
+.BR chown (1),
+.BR chgrp (1),
+.BR mitos\-utils\-compat (7)
