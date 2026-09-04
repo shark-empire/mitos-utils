@@ -124,7 +124,7 @@ oddly or error rather than passing bytes through unchanged.
 | Tool | Supported | Not implemented |
 |---|---|---|
 | `cat` | `-n`, `-b`, multiple files, `-` for stdin | binary-safe passthrough, `-A`/`-s`/`-T` |
-| `ls` | `-a`, `-l`, `-h`, multiple paths | sorting flags (`-t`, `-S`), `-R`, color, `-i` |
+| `ls` | `-a`, `-l`, `-h`, `-R` (recursive), `-t` (sort by mtime, newest first), `-S` (sort by size, largest first), multiple paths | color, `-i`, combining `-t`/`-S` with `-r` (reverse) |
 | `mkdir` | `-p` | `-m MODE` |
 | `rmdir` | plain removal | `-p` (remove ancestors), `--ignore-fail-on-non-empty` |
 | `touch` | create-if-missing, update mtime | `-t TIMESTAMP`, `-r REFFILE`, `-a`/`-m` (atime only) |

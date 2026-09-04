@@ -241,6 +241,9 @@ src/
   bin/
     <one five-line wrapper per utility, calling into applets::>
     mitos-box.rs   # the multiplexed dispatcher binary
+man/                # real troff man pages
+  man1/             # <name>.1 for every utility + mitos-box.1
+  man7/             # mitos-utils-{compat,security,integration}.7
 fuzz/              # separate Cargo workspace -- see "Fuzz testing"
   Cargo.toml
   fuzz_targets/

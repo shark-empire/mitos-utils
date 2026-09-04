@@ -13,7 +13,7 @@ also reachable through the single multiplexed binary,
 ## Filesystem
 
 - `cat [-n|-b] [FILE...]` -- concatenate files to stdout.
-- `ls [-a] [-l] [-h] [PATH...]` -- list directory contents.
+- `ls [-a] [-l] [-h] [-R] [-t] [-S] [PATH...]` -- list directory contents.
 - `mkdir [-p] DIR...` -- create directories.
 - `rmdir DIR...` -- remove empty directories.
 - `touch FILE...` -- create files / update modification time.
