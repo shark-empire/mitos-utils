@@ -141,7 +141,7 @@ pub async fn ipc_send<T: Serialize>(stream: &mut UnixStream, msg: &T) -> std::io
 pub async fn ipc_recv<T: DeserializeOwned>(stream: &mut UnixStream) -> std::io::Result<Option<T>> {
     let mut len_buf = [0u8; 4];
     match stream.read_exact(&mut len_buf).await {
-        Ok(()) => {}
+        Ok(_) => {}
         Err(e) if e.kind() == std::io::ErrorKind::UnexpectedEof => return Ok(None),
         Err(e) => return Err(e),
     }
