@@ -249,6 +249,33 @@ fn stat_reports_existing_file_size() {
 }
 
 #[test]
+fn ls_dash_capital_r_recurses_into_subdirectories() {
+    let scratch = Scratch::new();
+    std::fs::create_dir(scratch.join("sub")).unwrap();
+    std::fs::write(scratch.join("sub/nested.txt"), "x").unwrap();
+
+    let out = run(env!("CARGO_BIN_EXE_ls"), &["-R", scratch.path.to_str().unwrap()]);
+    assert!(out.status.success());
+    let text = stdout_of(&out);
+    assert!(text.contains("sub"));
+    assert!(text.contains("nested.txt"));
+}
+
+#[test]
+fn ls_dash_capital_s_sorts_largest_first() {
+    let scratch = Scratch::new();
+    std::fs::write(scratch.join("small.txt"), "x").unwrap();
+    std::fs::write(scratch.join("big.txt"), "xxxxxxxxxx").unwrap();
+
+    let out = run(env!("CARGO_BIN_EXE_ls"), &["-S", scratch.path.to_str().unwrap()]);
+    assert!(out.status.success());
+    let text = stdout_of(&out);
+    let big_pos = text.find("big.txt").expect("big.txt listed");
+    let small_pos = text.find("small.txt").expect("small.txt listed");
+    assert!(big_pos < small_pos, "expected big.txt before small.txt when sorted by -S");
+}
+
+#[test]
 fn rm_interactive_declines_on_no() {
     let scratch = Scratch::new();
     let file = scratch.join("keep.txt");
