@@ -60,7 +60,7 @@ fn head_default_returns_first_ten_lines() {
     let input: String = (1..=20).map(|n| format!("line{}\n", n)).collect();
     let out = run_with_stdin(env!("CARGO_BIN_EXE_head"), &[], &input);
     let output = stdout_of(&out);
-     let lines: Vec<&str> = output.lines().collect();
+    let lines: Vec<&str> = output.lines().collect();
     assert_eq!(lines.len(), 10);
     assert_eq!(lines[0], "line1");
     assert_eq!(lines[9], "line10");
@@ -78,7 +78,7 @@ fn tail_default_returns_last_ten_lines() {
     let input: String = (1..=20).map(|n| format!("line{}\n", n)).collect();
     let out = run_with_stdin(env!("CARGO_BIN_EXE_tail"), &[], &input);
     let output = stdout_of(&out);
-     let lines: Vec<&str> = output.lines().collect();
+    let lines: Vec<&str> = output.lines().collect();
     assert_eq!(lines.len(), 10);
     assert_eq!(lines[0], "line11");
     assert_eq!(lines[9], "line20");
