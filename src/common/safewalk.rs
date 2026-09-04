@@ -113,7 +113,13 @@ mod ffi {
         pub fn openat(dirfd: c_int, pathname: *const c_char, flags: c_int, mode: c_int) -> c_int;
         pub fn unlinkat(dirfd: c_int, pathname: *const c_char, flags: c_int) -> c_int;
         pub fn fchmodat(dirfd: c_int, pathname: *const c_char, mode: u32, flags: c_int) -> c_int;
-        pub fn fchownat(dirfd: c_int, pathname: *const c_char, owner: u32, group: u32, flags: c_int) -> c_int;
+        pub fn fchownat(
+            dirfd: c_int,
+            pathname: *const c_char,
+            owner: u32,
+            group: u32,
+            flags: c_int,
+        ) -> c_int;
         pub fn chown(path: *const c_char, owner: u32, group: u32) -> c_int;
     }
 }
@@ -129,7 +135,8 @@ pub struct SafeDir {
 }
 
 fn to_cstring(name: &str) -> io::Result<CString> {
-    CString::new(name).map_err(|_| io::Error::new(io::ErrorKind::InvalidInput, "path contains a NUL byte"))
+    CString::new(name)
+        .map_err(|_| io::Error::new(io::ErrorKind::InvalidInput, "path contains a NUL byte"))
 }
 
 impl SafeDir {
@@ -184,7 +191,9 @@ impl SafeDir {
     /// Whether `name` (relative to this directory, not following
     /// symlinks) is itself a symlink.
     pub fn entry_is_symlink(&self, name: &str) -> io::Result<bool> {
-        Ok(std::fs::symlink_metadata(self.scoped_path(name))?.file_type().is_symlink())
+        Ok(std::fs::symlink_metadata(self.scoped_path(name))?
+            .file_type()
+            .is_symlink())
     }
 
     /// Open `name` as a subdirectory of this one, via the
@@ -202,7 +211,10 @@ impl SafeDir {
             ));
         }
         if !pre.is_dir() {
-            return Err(io::Error::new(io::ErrorKind::Other, format!("'{}' is not a directory", name)));
+            return Err(io::Error::new(
+                io::ErrorKind::Other,
+                format!("'{}' is not a directory", name),
+            ));
         }
         let (pre_dev, pre_ino) = (pre.dev(), pre.ino());
 
@@ -217,7 +229,10 @@ impl SafeDir {
         if post.dev() != pre_dev || post.ino() != pre_ino {
             return Err(io::Error::new(
                 io::ErrorKind::Other,
-                format!("'{}' changed during traversal (possible symlink race) -- refusing", name),
+                format!(
+                    "'{}' changed during traversal (possible symlink race) -- refusing",
+                    name
+                ),
             ));
         }
         Ok(SafeDir { file })

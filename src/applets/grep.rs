@@ -27,13 +27,23 @@ pub fn run(args: Vec<String>) -> AppResult<()> {
     }
     rest.extend(forced);
     if rest.is_empty() {
-        return Err(AppError::usage("usage: grep [-i] [-v] [-n] PATTERN [FILE]..."));
+        return Err(AppError::usage(
+            "usage: grep [-i] [-v] [-n] PATTERN [FILE]...",
+        ));
     }
 
     let pattern = rest.remove(0);
-    let pattern_cmp = if ignore_case { pattern.to_lowercase() } else { pattern.clone() };
+    let pattern_cmp = if ignore_case {
+        pattern.to_lowercase()
+    } else {
+        pattern.clone()
+    };
     let files = rest;
-    let sources: Vec<String> = if files.is_empty() { vec!["-".to_string()] } else { files };
+    let sources: Vec<String> = if files.is_empty() {
+        vec!["-".to_string()]
+    } else {
+        files
+    };
     let multiple = sources.len() > 1;
 
     let mut had_error = false;
@@ -54,11 +64,19 @@ pub fn run(args: Vec<String>) -> AppResult<()> {
         };
 
         for (i, line) in reader.lines().flatten().enumerate() {
-            let hay = if ignore_case { line.to_lowercase() } else { line.clone() };
+            let hay = if ignore_case {
+                line.to_lowercase()
+            } else {
+                line.clone()
+            };
             let is_match = hay.contains(&pattern_cmp);
             if is_match != invert {
                 matched_any = true;
-                let prefix = if multiple { format!("{}:", path) } else { String::new() };
+                let prefix = if multiple {
+                    format!("{}:", path)
+                } else {
+                    String::new()
+                };
                 if show_line_numbers {
                     println!("{}{}:{}", prefix, i + 1, line);
                 } else {

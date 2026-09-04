@@ -67,7 +67,11 @@ fn chgrp_one(path: &Path, gid: u32, recursive: bool) -> std::io::Result<()> {
 
 #[cfg(not(target_os = "linux"))]
 fn chgrp_one(path: &Path, gid: u32, recursive: bool) -> std::io::Result<()> {
-    let targets = if recursive { walk(path)? } else { vec![path.to_path_buf()] };
+    let targets = if recursive {
+        walk(path)?
+    } else {
+        vec![path.to_path_buf()]
+    };
     for target in &targets {
         chgrp_path(target, gid)?;
     }
@@ -88,5 +92,8 @@ fn chgrp_path(path: &Path, gid: u32) -> std::io::Result<()> {
 
 #[cfg(not(unix))]
 fn chgrp_path(_path: &Path, _gid: u32) -> std::io::Result<()> {
-    Err(std::io::Error::new(std::io::ErrorKind::Unsupported, "chgrp not available on this target"))
+    Err(std::io::Error::new(
+        std::io::ErrorKind::Unsupported,
+        "chgrp not available on this target",
+    ))
 }

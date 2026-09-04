@@ -164,7 +164,14 @@ pub fn supplementary_groups() -> Vec<u32> {
 
 #[cfg(not(unix))]
 pub fn current_identity() -> Identity {
-    Identity { uid: 0, gid: 0, euid: 0, egid: 0, user: "unknown".into(), group: "unknown".into() }
+    Identity {
+        uid: 0,
+        gid: 0,
+        euid: 0,
+        egid: 0,
+        user: "unknown".into(),
+        group: "unknown".into(),
+    }
 }
 #[cfg(not(unix))]
 pub fn name_for_uid(_uid: u32) -> Option<String> {

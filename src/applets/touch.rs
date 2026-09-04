@@ -34,6 +34,10 @@ fn touch_one(path: &str) -> std::io::Result<()> {
         let file = OpenOptions::new().write(true).open(path)?;
         file.set_modified(now)
     } else {
-        OpenOptions::new().create(true).write(true).open(path).map(|_| ())
+        OpenOptions::new()
+            .create(true)
+            .write(true)
+            .open(path)
+            .map(|_| ())
     }
 }

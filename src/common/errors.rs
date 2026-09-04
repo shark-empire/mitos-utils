@@ -32,24 +32,36 @@ impl AppError {
     /// A general failure (exit code 1) with a message that `run`
     /// will print as `"<prog>: <message>"`.
     pub fn new(message: impl Into<String>) -> Self {
-        Self { message: message.into(), code: EXIT_FAILURE }
+        Self {
+            message: message.into(),
+            code: EXIT_FAILURE,
+        }
     }
 
     /// A bad-arguments failure (exit code 2).
     pub fn usage(message: impl Into<String>) -> Self {
-        Self { message: message.into(), code: EXIT_USAGE }
+        Self {
+            message: message.into(),
+            code: EXIT_USAGE,
+        }
     }
 
     /// A failure with an explicit exit code.
     pub fn with_code(message: impl Into<String>, code: u8) -> Self {
-        Self { message: message.into(), code }
+        Self {
+            message: message.into(),
+            code,
+        }
     }
 
     /// A failure that has already been reported (e.g. per-file
     /// errors printed in a loop over several arguments) -- `run`
     /// will exit with `code` but print nothing further.
     pub fn silent(code: u8) -> Self {
-        Self { message: String::new(), code }
+        Self {
+            message: String::new(),
+            code,
+        }
     }
 }
 
@@ -87,7 +99,12 @@ pub type AppResult<T> = Result<T, AppError>;
 ///     mitos_utils::common::errors::run("cat", mitos_utils::applets::cat::USAGE, args, mitos_utils::applets::cat::run)
 /// }
 /// ```
-pub fn run(prog: &str, usage: &str, args: Vec<String>, body: impl FnOnce(Vec<String>) -> AppResult<()>) -> ExitCode {
+pub fn run(
+    prog: &str,
+    usage: &str,
+    args: Vec<String>,
+    body: impl FnOnce(Vec<String>) -> AppResult<()>,
+) -> ExitCode {
     crate::common::output::reset_sigpipe();
 
     if args.iter().any(|a| a == "--help") {

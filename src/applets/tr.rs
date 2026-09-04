@@ -20,12 +20,17 @@ pub fn run(args: Vec<String>) -> AppResult<()> {
     }
 
     let mut input = String::new();
-    io::stdin().read_to_string(&mut input).map_err(AppError::from)?;
+    io::stdin()
+        .read_to_string(&mut input)
+        .map_err(AppError::from)?;
     let stdout = io::stdout();
     let mut out = stdout.lock();
 
     if delete_mode {
-        let set1: Vec<char> = rest.first().map(|s| s.chars().collect()).unwrap_or_default();
+        let set1: Vec<char> = rest
+            .first()
+            .map(|s| s.chars().collect())
+            .unwrap_or_default();
         write!(out, "{}", delete_chars(&input, &set1)).map_err(AppError::from)?;
         return Ok(());
     }

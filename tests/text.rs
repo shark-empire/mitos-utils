@@ -207,7 +207,10 @@ fn tail_dash_c_returns_last_n_bytes_from_a_file() {
     let file = dir.join("data.txt");
     std::fs::write(&file, "abcdefghij").unwrap();
 
-    let out = run(env!("CARGO_BIN_EXE_tail"), &["-c", "4", file.to_str().unwrap()]);
+    let out = run(
+        env!("CARGO_BIN_EXE_tail"),
+        &["-c", "4", file.to_str().unwrap()],
+    );
     assert_eq!(stdout_of(&out), "ghij");
     let _ = std::fs::remove_dir_all(&dir);
 }
@@ -223,7 +226,11 @@ fn sort_dash_k_sorts_by_field() {
 #[test]
 fn sort_dash_k_dash_n_sorts_by_field_numerically() {
     let input = "x:10\ny:2\nz:1\n";
-    let out = run_with_stdin(env!("CARGO_BIN_EXE_sort"), &["-t", ":", "-k", "2", "-n"], input);
+    let out = run_with_stdin(
+        env!("CARGO_BIN_EXE_sort"),
+        &["-t", ":", "-k", "2", "-n"],
+        input,
+    );
     assert_eq!(stdout_of(&out), "z:1\ny:2\nx:10\n");
 }
 #[test]
@@ -235,7 +242,10 @@ fn diff_identical_files_exits_zero_with_no_output() {
     std::fs::write(&a, "same\ncontent\n").unwrap();
     std::fs::write(&b, "same\ncontent\n").unwrap();
 
-    let out = run(env!("CARGO_BIN_EXE_diff"), &[a.to_str().unwrap(), b.to_str().unwrap()]);
+    let out = run(
+        env!("CARGO_BIN_EXE_diff"),
+        &[a.to_str().unwrap(), b.to_str().unwrap()],
+    );
     assert!(out.status.success());
     assert!(stdout_of(&out).is_empty());
     let _ = std::fs::remove_dir_all(&dir);
@@ -250,7 +260,10 @@ fn diff_differing_files_exits_nonzero_with_output() {
     std::fs::write(&a, "one\n").unwrap();
     std::fs::write(&b, "two\n").unwrap();
 
-    let out = run(env!("CARGO_BIN_EXE_diff"), &[a.to_str().unwrap(), b.to_str().unwrap()]);
+    let out = run(
+        env!("CARGO_BIN_EXE_diff"),
+        &[a.to_str().unwrap(), b.to_str().unwrap()],
+    );
     assert!(!out.status.success());
     assert!(!stdout_of(&out).is_empty());
     let _ = std::fs::remove_dir_all(&dir);

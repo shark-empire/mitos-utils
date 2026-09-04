@@ -75,10 +75,18 @@ pub enum IpcRequest {
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub enum IpcResponse {
-    AutoCompleteResult { suggestions: Vec<String> },
-    BufferData { pid: u32, prompt: String, text: String },
+    AutoCompleteResult {
+        suggestions: Vec<String>,
+    },
+    BufferData {
+        pid: u32,
+        prompt: String,
+        text: String,
+    },
     Ack,
-    Error { message: String },
+    Error {
+        message: String,
+    },
 }
 
 // ------------------------------------------------------------------
@@ -139,7 +147,10 @@ pub async fn ipc_recv<T: DeserializeOwned>(stream: &mut UnixStream) -> std::io::
     }
     let len = u32::from_le_bytes(len_buf) as usize;
     if len > 16 * 1024 * 1024 {
-        return Err(std::io::Error::new(std::io::ErrorKind::InvalidData, "ipc message too large"));
+        return Err(std::io::Error::new(
+            std::io::ErrorKind::InvalidData,
+            "ipc message too large",
+        ));
     }
     let mut buf = vec![0u8; len];
     stream.read_exact(&mut buf).await?;

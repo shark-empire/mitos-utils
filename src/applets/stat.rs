@@ -46,10 +46,10 @@ fn print_stat(name: &str, meta: &std::fs::Metadata) {
         's' => "socket",
         _ => "regular file",
     };
-    let owner = crate::common::users::name_for_uid(meta.uid())
-        .unwrap_or_else(|| meta.uid().to_string());
-    let group = crate::common::users::name_for_gid(meta.gid())
-        .unwrap_or_else(|| meta.gid().to_string());
+    let owner =
+        crate::common::users::name_for_uid(meta.uid()).unwrap_or_else(|| meta.uid().to_string());
+    let group =
+        crate::common::users::name_for_gid(meta.gid()).unwrap_or_else(|| meta.gid().to_string());
     let mtime = meta
         .modified()
         .ok()
@@ -58,7 +58,12 @@ fn print_stat(name: &str, meta: &std::fs::Metadata) {
         .unwrap_or(0);
 
     println!("  File: {}", name);
-    println!("  Size: {:<12} Blocks: {:<10} {}", meta.len(), meta.blocks(), kind);
+    println!(
+        "  Size: {:<12} Blocks: {:<10} {}",
+        meta.len(),
+        meta.blocks(),
+        kind
+    );
     println!(
         "Access: ({:04o}/{})  Uid: ( {:>5}/{:>8})  Gid: ( {:>5}/{:>8})",
         mode,

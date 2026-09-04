@@ -17,7 +17,8 @@ struct Scratch {
 impl Scratch {
     fn new() -> Self {
         let n = COUNTER.fetch_add(1, Ordering::SeqCst);
-        let path = std::env::temp_dir().join(format!("mitos-utils-cliinfra-{}-{}", std::process::id(), n));
+        let path =
+            std::env::temp_dir().join(format!("mitos-utils-cliinfra-{}-{}", std::process::id(), n));
         std::fs::create_dir_all(&path).expect("create scratch dir");
         Scratch { path }
     }
@@ -65,7 +66,10 @@ fn help_does_not_shadow_ls_dash_h_human_readable() {
     // `-h` must keep meaning "human-readable" for ls/du, not become
     // a help shorthand -- see common::errors::run's doc comment.
     let scratch = Scratch::new();
-    let out = run(env!("CARGO_BIN_EXE_ls"), &["-l", "-h", scratch.path.to_str().unwrap()]);
+    let out = run(
+        env!("CARGO_BIN_EXE_ls"),
+        &["-l", "-h", scratch.path.to_str().unwrap()],
+    );
     assert!(out.status.success());
     // A real listing (even of an empty dir) succeeds silently; if -h
     // had been hijacked as --help this would instead print a "usage:
@@ -80,7 +84,11 @@ fn double_dash_allows_operating_on_a_dash_prefixed_filename() {
     std::fs::write(&weird, "content").unwrap();
 
     let out = run(env!("CARGO_BIN_EXE_cat"), &["--", weird.to_str().unwrap()]);
-    assert!(out.status.success(), "stderr: {}", String::from_utf8_lossy(&out.stderr));
+    assert!(
+        out.status.success(),
+        "stderr: {}",
+        String::from_utf8_lossy(&out.stderr)
+    );
     assert_eq!(stdout_of(&out), "content\n");
 }
 
@@ -91,7 +99,11 @@ fn double_dash_lets_rm_remove_a_dash_prefixed_filename() {
     std::fs::write(&weird, "x").unwrap();
 
     let out = run(env!("CARGO_BIN_EXE_rm"), &["--", weird.to_str().unwrap()]);
-    assert!(out.status.success(), "stderr: {}", String::from_utf8_lossy(&out.stderr));
+    assert!(
+        out.status.success(),
+        "stderr: {}",
+        String::from_utf8_lossy(&out.stderr)
+    );
     assert!(!weird.exists());
 }
 

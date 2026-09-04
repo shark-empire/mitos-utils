@@ -7,7 +7,10 @@ use std::time::Duration;
 pub const USAGE: &str = "sleep DURATION -- pause (accepts s/m/h suffixes)";
 
 pub fn run(args: Vec<String>) -> AppResult<()> {
-    let arg = args.into_iter().next().ok_or_else(|| AppError::usage("missing operand"))?;
+    let arg = args
+        .into_iter()
+        .next()
+        .ok_or_else(|| AppError::usage("missing operand"))?;
 
     let (number_part, multiplier) = match arg.chars().last() {
         Some('s') => (&arg[..arg.len() - 1], 1.0),

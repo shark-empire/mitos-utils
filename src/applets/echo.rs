@@ -24,7 +24,11 @@ pub fn run(args: Vec<String>) -> AppResult<()> {
     }
 
     let text = args[start..].join(" ");
-    let text = if interpret_escapes { expand_escapes(&text) } else { text };
+    let text = if interpret_escapes {
+        expand_escapes(&text)
+    } else {
+        text
+    };
 
     if no_newline {
         print!("{}", text);

@@ -26,7 +26,11 @@ fn sleep_pauses_for_roughly_the_requested_time() {
     let out = run(env!("CARGO_BIN_EXE_sleep"), &["0.2"]);
     let elapsed = start.elapsed();
     assert!(out.status.success());
-    assert!(elapsed.as_millis() >= 180, "slept for {:?}, expected >= 180ms", elapsed);
+    assert!(
+        elapsed.as_millis() >= 180,
+        "slept for {:?}, expected >= 180ms",
+        elapsed
+    );
 }
 
 #[test]
@@ -72,7 +76,10 @@ fn printenv_prints_requested_variable() {
 
 #[test]
 fn printenv_missing_variable_exits_nonzero() {
-    let out = run(env!("CARGO_BIN_EXE_printenv"), &["MITOS_UTILS_DEFINITELY_UNSET_VAR"]);
+    let out = run(
+        env!("CARGO_BIN_EXE_printenv"),
+        &["MITOS_UTILS_DEFINITELY_UNSET_VAR"],
+    );
     assert!(!out.status.success());
 }
 

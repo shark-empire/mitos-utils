@@ -13,7 +13,10 @@ mod ffi {
 pub const USAGE: &str = "umount TARGET -- unmount a filesystem";
 
 pub fn run(args: Vec<String>) -> AppResult<()> {
-    let target = args.into_iter().next().ok_or_else(|| AppError::usage("usage: umount TARGET"))?;
+    let target = args
+        .into_iter()
+        .next()
+        .ok_or_else(|| AppError::usage("usage: umount TARGET"))?;
     do_umount(&target)
 }
 

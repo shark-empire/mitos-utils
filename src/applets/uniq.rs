@@ -22,7 +22,8 @@ pub fn run(args: Vec<String>) -> AppResult<()> {
 
     let lines: Vec<String> = match file {
         Some(path) if path != "-" => {
-            let content = std::fs::read_to_string(&path).map_err(|e| AppError::new(format!("{}: {}", path, e)))?;
+            let content = std::fs::read_to_string(&path)
+                .map_err(|e| AppError::new(format!("{}: {}", path, e)))?;
             content.lines().map(String::from).collect()
         }
         _ => io::stdin().lock().lines().flatten().collect(),

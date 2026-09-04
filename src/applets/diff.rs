@@ -11,8 +11,10 @@ pub fn run(args: Vec<String>) -> AppResult<()> {
         return Err(AppError::usage("usage: diff FILE1 FILE2"));
     }
 
-    let a = std::fs::read_to_string(&args[0]).map_err(|e| AppError::new(format!("{}: {}", args[0], e)))?;
-    let b = std::fs::read_to_string(&args[1]).map_err(|e| AppError::new(format!("{}: {}", args[1], e)))?;
+    let a = std::fs::read_to_string(&args[0])
+        .map_err(|e| AppError::new(format!("{}: {}", args[0], e)))?;
+    let b = std::fs::read_to_string(&args[1])
+        .map_err(|e| AppError::new(format!("{}: {}", args[1], e)))?;
 
     let lines_a: Vec<&str> = a.lines().collect();
     let lines_b: Vec<&str> = b.lines().collect();

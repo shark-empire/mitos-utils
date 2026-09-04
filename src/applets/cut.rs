@@ -16,16 +16,22 @@ pub fn run(args: Vec<String>) -> AppResult<()> {
     while let Some(arg) = args.next() {
         match arg.as_str() {
             "-d" => {
-                let d = args.next().ok_or_else(|| AppError::usage("option '-d' requires an argument"))?;
+                let d = args
+                    .next()
+                    .ok_or_else(|| AppError::usage("option '-d' requires an argument"))?;
                 delimiter = d.chars().next().unwrap_or('\t');
             }
             "-f" => {
-                fields_spec = Some(args.next().ok_or_else(|| AppError::usage("option '-f' requires an argument"))?);
+                fields_spec = Some(
+                    args.next()
+                        .ok_or_else(|| AppError::usage("option '-f' requires an argument"))?,
+                );
             }
             _ => files.push(arg),
         }
     }
-    let fields_spec = fields_spec.ok_or_else(|| AppError::usage("you must specify a list of fields with -f"))?;
+    let fields_spec =
+        fields_spec.ok_or_else(|| AppError::usage("you must specify a list of fields with -f"))?;
     let fields = parse_field_list(&fields_spec)?;
 
     if files.is_empty() {
@@ -63,14 +69,24 @@ pub fn parse_field_list(spec: &str) -> AppResult<Vec<usize>> {
     let mut out = Vec::new();
     for part in spec.split(',') {
         if let Some((a, b)) = part.split_once('-') {
-            let start: usize = a.parse().map_err(|_| AppError::usage(format!("invalid field list: '{}'", spec)))?;
-            let end: usize = b.parse().map_err(|_| AppError::usage(format!("invalid field list: '{}'", spec)))?;
+            let start: usize = a
+                .parse()
+                .map_err(|_| AppError::usage(format!("invalid field list: '{}'", spec)))?;
+            let end: usize = b
+                .parse()
+                .map_err(|_| AppError::usage(format!("invalid field list: '{}'", spec)))?;
             if start > end {
-                return Err(AppError::usage(format!("invalid decreasing range: '{}'", part)));
+                return Err(AppError::usage(format!(
+                    "invalid decreasing range: '{}'",
+                    part
+                )));
             }
             out.extend(start..=end);
         } else {
-            out.push(part.parse().map_err(|_| AppError::usage(format!("invalid field list: '{}'", spec)))?);
+            out.push(
+                part.parse()
+                    .map_err(|_| AppError::usage(format!("invalid field list: '{}'", spec)))?,
+            );
         }
     }
     Ok(out)

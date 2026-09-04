@@ -26,7 +26,10 @@ pub fn run(args: Vec<String>) -> AppResult<()> {
                 return Err(AppError::usage(format!("unrecognized option '{}'", arg)))
             }
             _ if arg.starts_with('-') && arg.len() > 1 => {
-                return Err(AppError::usage(format!("invalid option -- '{}'", &arg[1..])))
+                return Err(AppError::usage(format!(
+                    "invalid option -- '{}'",
+                    &arg[1..]
+                )))
             }
             _ => files.push(arg),
         }

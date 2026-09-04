@@ -26,7 +26,9 @@ pub fn run(args: Vec<String>) -> AppResult<()> {
             "-n" => numeric = true,
             "-u" => unique = true,
             "-k" => {
-                let n = args.next().ok_or_else(|| AppError::usage("option '-k' requires an argument"))?;
+                let n = args
+                    .next()
+                    .ok_or_else(|| AppError::usage("option '-k' requires an argument"))?;
                 let first_field = n.split(',').next().unwrap_or(&n);
                 key_field = Some(
                     first_field
@@ -35,7 +37,9 @@ pub fn run(args: Vec<String>) -> AppResult<()> {
                 );
             }
             "-t" => {
-                let d = args.next().ok_or_else(|| AppError::usage("option '-t' requires an argument"))?;
+                let d = args
+                    .next()
+                    .ok_or_else(|| AppError::usage("option '-t' requires an argument"))?;
                 delimiter = d.chars().next();
             }
             _ => files.push(arg),

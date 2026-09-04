@@ -22,7 +22,8 @@ struct Scratch {
 impl Scratch {
     fn new() -> Self {
         let n = COUNTER.fetch_add(1, Ordering::SeqCst);
-        let path = std::env::temp_dir().join(format!("mitos-utils-test-{}-{}", std::process::id(), n));
+        let path =
+            std::env::temp_dir().join(format!("mitos-utils-test-{}-{}", std::process::id(), n));
         std::fs::create_dir_all(&path).expect("create scratch dir");
         Scratch { path }
     }
@@ -89,7 +90,10 @@ fn mkdir_without_parents_fails_on_missing_parent() {
 fn mkdir_dash_p_creates_parents() {
     let scratch = Scratch::new();
     let nested = scratch.join("a/b/c");
-    let out = run(env!("CARGO_BIN_EXE_mkdir"), &["-p", nested.to_str().unwrap()]);
+    let out = run(
+        env!("CARGO_BIN_EXE_mkdir"),
+        &["-p", nested.to_str().unwrap()],
+    );
     assert!(out.status.success());
     assert!(nested.is_dir());
 }
@@ -131,7 +135,10 @@ fn cp_copies_file_contents() {
     let dst = scratch.join("dst.txt");
     std::fs::write(&src, "copy me").unwrap();
 
-    let out = run(env!("CARGO_BIN_EXE_cp"), &[src.to_str().unwrap(), dst.to_str().unwrap()]);
+    let out = run(
+        env!("CARGO_BIN_EXE_cp"),
+        &[src.to_str().unwrap(), dst.to_str().unwrap()],
+    );
     assert!(out.status.success());
     assert_eq!(std::fs::read_to_string(&dst).unwrap(), "copy me");
 }
@@ -149,7 +156,10 @@ fn cp_recursive_copies_directory_tree() {
         &["-r", src_dir.to_str().unwrap(), dst_dir.to_str().unwrap()],
     );
     assert!(out.status.success());
-    assert_eq!(std::fs::read_to_string(dst_dir.join("nested/file.txt")).unwrap(), "deep");
+    assert_eq!(
+        std::fs::read_to_string(dst_dir.join("nested/file.txt")).unwrap(),
+        "deep"
+    );
 }
 
 #[test]
@@ -159,7 +169,10 @@ fn mv_renames_file() {
     let dst = scratch.join("b.txt");
     std::fs::write(&src, "move me").unwrap();
 
-    let out = run(env!("CARGO_BIN_EXE_mv"), &[src.to_str().unwrap(), dst.to_str().unwrap()]);
+    let out = run(
+        env!("CARGO_BIN_EXE_mv"),
+        &[src.to_str().unwrap(), dst.to_str().unwrap()],
+    );
     assert!(out.status.success());
     assert!(!src.exists());
     assert_eq!(std::fs::read_to_string(&dst).unwrap(), "move me");
@@ -254,7 +267,10 @@ fn ls_dash_capital_r_recurses_into_subdirectories() {
     std::fs::create_dir(scratch.join("sub")).unwrap();
     std::fs::write(scratch.join("sub/nested.txt"), "x").unwrap();
 
-    let out = run(env!("CARGO_BIN_EXE_ls"), &["-R", scratch.path.to_str().unwrap()]);
+    let out = run(
+        env!("CARGO_BIN_EXE_ls"),
+        &["-R", scratch.path.to_str().unwrap()],
+    );
     assert!(out.status.success());
     let text = stdout_of(&out);
     assert!(text.contains("sub"));
@@ -267,12 +283,18 @@ fn ls_dash_capital_s_sorts_largest_first() {
     std::fs::write(scratch.join("small.txt"), "x").unwrap();
     std::fs::write(scratch.join("big.txt"), "xxxxxxxxxx").unwrap();
 
-    let out = run(env!("CARGO_BIN_EXE_ls"), &["-S", scratch.path.to_str().unwrap()]);
+    let out = run(
+        env!("CARGO_BIN_EXE_ls"),
+        &["-S", scratch.path.to_str().unwrap()],
+    );
     assert!(out.status.success());
     let text = stdout_of(&out);
     let big_pos = text.find("big.txt").expect("big.txt listed");
     let small_pos = text.find("small.txt").expect("small.txt listed");
-    assert!(big_pos < small_pos, "expected big.txt before small.txt when sorted by -S");
+    assert!(
+        big_pos < small_pos,
+        "expected big.txt before small.txt when sorted by -S"
+    );
 }
 
 #[test]
@@ -281,7 +303,11 @@ fn rm_interactive_declines_on_no() {
     let file = scratch.join("keep.txt");
     std::fs::write(&file, "x").unwrap();
 
-    let out = run_with_stdin(env!("CARGO_BIN_EXE_rm"), &["-i", file.to_str().unwrap()], "n\n");
+    let out = run_with_stdin(
+        env!("CARGO_BIN_EXE_rm"),
+        &["-i", file.to_str().unwrap()],
+        "n\n",
+    );
     assert!(out.status.success());
     assert!(file.exists(), "file should survive a declined -i prompt");
 }
@@ -292,9 +318,16 @@ fn rm_interactive_removes_on_yes() {
     let file = scratch.join("gone.txt");
     std::fs::write(&file, "x").unwrap();
 
-    let out = run_with_stdin(env!("CARGO_BIN_EXE_rm"), &["-i", file.to_str().unwrap()], "y\n");
+    let out = run_with_stdin(
+        env!("CARGO_BIN_EXE_rm"),
+        &["-i", file.to_str().unwrap()],
+        "y\n",
+    );
     assert!(out.status.success());
-    assert!(!file.exists(), "file should be removed after a confirmed -i prompt");
+    assert!(
+        !file.exists(),
+        "file should be removed after a confirmed -i prompt"
+    );
 }
 
 #[test]
@@ -349,7 +382,10 @@ fn cp_dash_p_preserves_modification_time() {
         .set_modified(backdated)
         .unwrap();
 
-    let out = run(env!("CARGO_BIN_EXE_cp"), &["-p", src.to_str().unwrap(), dst.to_str().unwrap()]);
+    let out = run(
+        env!("CARGO_BIN_EXE_cp"),
+        &["-p", src.to_str().unwrap(), dst.to_str().unwrap()],
+    );
     assert!(out.status.success());
 
     let src_mtime = std::fs::metadata(&src).unwrap().modified().unwrap();

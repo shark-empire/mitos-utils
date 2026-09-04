@@ -12,9 +12,15 @@ pub fn format_mode(mode: u32, file_type_char: char) -> String {
     let mut s = String::with_capacity(10);
     s.push(file_type_char);
     const BITS: [(u32, char); 9] = [
-        (0o400, 'r'), (0o200, 'w'), (0o100, 'x'),
-        (0o040, 'r'), (0o020, 'w'), (0o010, 'x'),
-        (0o004, 'r'), (0o002, 'w'), (0o001, 'x'),
+        (0o400, 'r'),
+        (0o200, 'w'),
+        (0o100, 'x'),
+        (0o040, 'r'),
+        (0o020, 'w'),
+        (0o010, 'x'),
+        (0o004, 'r'),
+        (0o002, 'w'),
+        (0o001, 'x'),
     ];
     for (mask, ch) in BITS {
         s.push(if mode & mask != 0 { ch } else { '-' });

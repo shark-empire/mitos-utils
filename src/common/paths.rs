@@ -47,7 +47,11 @@ pub fn dirname(path: &str) -> String {
 /// target (or a component of it) doesn't exist yet -- matching GNU
 /// `realpath -m`.
 pub fn normalize(path: &Path, cwd: &Path) -> PathBuf {
-    let absolute = if path.is_absolute() { path.to_path_buf() } else { cwd.join(path) };
+    let absolute = if path.is_absolute() {
+        path.to_path_buf()
+    } else {
+        cwd.join(path)
+    };
     let mut out = PathBuf::from("/");
     for comp in absolute.components() {
         match comp {

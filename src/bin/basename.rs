@@ -1,4 +1,9 @@
 fn main() -> std::process::ExitCode {
     let args: Vec<String> = std::env::args().skip(1).collect();
-    mitos_utils::common::errors::run("basename", mitos_utils::applets::basename::USAGE, args, mitos_utils::applets::basename::run)
+    mitos_utils::common::errors::run(
+        "basename",
+        mitos_utils::applets::basename::USAGE,
+        args,
+        mitos_utils::applets::basename::run,
+    )
 }

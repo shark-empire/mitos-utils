@@ -12,8 +12,8 @@ pub const USAGE: &str = "ps -- list running processes (Linux)";
 #[cfg(target_os = "linux")]
 pub fn run(_args: Vec<String>) -> AppResult<()> {
     println!("{:>7} {:<8} COMMAND", "PID", "STATE");
-    let entries =
-        std::fs::read_dir("/proc").map_err(|e| AppError::new(format!("cannot read /proc: {}", e)))?;
+    let entries = std::fs::read_dir("/proc")
+        .map_err(|e| AppError::new(format!("cannot read /proc: {}", e)))?;
     for entry in entries.flatten() {
         let name = entry.file_name();
         let Some(pid) = name.to_str().and_then(|s| s.parse::<u32>().ok()) else {

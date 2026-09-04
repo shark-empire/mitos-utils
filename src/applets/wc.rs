@@ -69,7 +69,14 @@ pub fn run(args: Vec<String>) -> AppResult<()> {
                 }
             }
         };
-        print_counts(&counts, show_lines, show_words, show_bytes, path, multiple || path != "-");
+        print_counts(
+            &counts,
+            show_lines,
+            show_words,
+            show_bytes,
+            path,
+            multiple || path != "-",
+        );
         total.lines += counts.lines;
         total.words += counts.words;
         total.bytes += counts.bytes;

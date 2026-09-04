@@ -53,7 +53,10 @@ pub fn run(args: Vec<String>) -> AppResult<()> {
             dest.clone()
         };
 
-        if interactive && target.exists() && !confirm(&format!("cp: overwrite '{}'?", target.display())) {
+        if interactive
+            && target.exists()
+            && !confirm(&format!("cp: overwrite '{}'?", target.display()))
+        {
             continue;
         }
 
@@ -113,5 +116,8 @@ fn copy_tree(src: &Path, dest: &Path, preserve: bool) -> std::io::Result<()> {
 
 fn preserve_mtime(src: &Path, dest: &Path) -> std::io::Result<()> {
     let mtime = fs::metadata(src)?.modified()?;
-    fs::OpenOptions::new().read(true).open(dest)?.set_modified(mtime)
+    fs::OpenOptions::new()
+        .read(true)
+        .open(dest)?
+        .set_modified(mtime)
 }

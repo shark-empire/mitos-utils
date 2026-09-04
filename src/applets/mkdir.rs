@@ -28,7 +28,11 @@ pub fn run(args: Vec<String>) -> AppResult<()> {
 
     let mut had_error = false;
     for dir in &dirs {
-        let result = if parents { fs::create_dir_all(dir) } else { fs::create_dir(dir) };
+        let result = if parents {
+            fs::create_dir_all(dir)
+        } else {
+            fs::create_dir(dir)
+        };
         if let Err(err) = result {
             error_path("mkdir", dir, format!("cannot create directory: {}", err));
             had_error = true;

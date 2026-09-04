@@ -20,7 +20,10 @@ pub fn run(args: Vec<String>) -> AppResult<()> {
 
     let (opts, forced) = split_dashdash(args);
     for arg in opts {
-        if let Some(flags) = arg.strip_prefix('-').filter(|f| !f.is_empty() && !arg.starts_with("--")) {
+        if let Some(flags) = arg
+            .strip_prefix('-')
+            .filter(|f| !f.is_empty() && !arg.starts_with("--"))
+        {
             for c in flags.chars() {
                 match c {
                     'a' => show_all = true,
@@ -107,7 +110,11 @@ fn print_entry(display_name: &str, full_path: &Path, long: bool, human: bool) {
             .unwrap_or_else(|| meta.uid().to_string());
         let group = crate::common::users::name_for_gid(meta.gid())
             .unwrap_or_else(|| meta.gid().to_string());
-        let size = if human { human_size(meta.len()) } else { meta.len().to_string() };
+        let size = if human {
+            human_size(meta.len())
+        } else {
+            meta.len().to_string()
+        };
         println!(
             "{} {:>3} {:<8} {:<8} {:>8} {}",
             mode_str,
@@ -120,7 +127,11 @@ fn print_entry(display_name: &str, full_path: &Path, long: bool, human: bool) {
     }
     #[cfg(not(unix))]
     {
-        let size = if human { human_size(meta.len()) } else { meta.len().to_string() };
+        let size = if human {
+            human_size(meta.len())
+        } else {
+            meta.len().to_string()
+        };
         println!("{:>10} {}", size, display_name);
     }
 }

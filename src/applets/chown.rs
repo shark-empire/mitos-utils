@@ -52,7 +52,8 @@ pub fn run(args: Vec<String>) -> AppResult<()> {
     };
     let gid = match group_name {
         Some(name) => Some(
-            gid_for_name(name).ok_or_else(|| AppError::new(format!("invalid group: '{}'", name)))?,
+            gid_for_name(name)
+                .ok_or_else(|| AppError::new(format!("invalid group: '{}'", name)))?,
         ),
         None => None,
     };
@@ -74,7 +75,12 @@ pub fn run(args: Vec<String>) -> AppResult<()> {
 }
 
 #[cfg(target_os = "linux")]
-fn chown_one(path: &Path, uid: Option<u32>, gid: Option<u32>, recursive: bool) -> std::io::Result<()> {
+fn chown_one(
+    path: &Path,
+    uid: Option<u32>,
+    gid: Option<u32>,
+    recursive: bool,
+) -> std::io::Result<()> {
     let owner = uid.unwrap_or(u32::MAX);
     let group = gid.unwrap_or(u32::MAX);
     if recursive && path.is_dir() && !path.is_symlink() {
@@ -84,10 +90,19 @@ fn chown_one(path: &Path, uid: Option<u32>, gid: Option<u32>, recursive: bool) -
 }
 
 #[cfg(not(target_os = "linux"))]
-fn chown_one(path: &Path, uid: Option<u32>, gid: Option<u32>, recursive: bool) -> std::io::Result<()> {
+fn chown_one(
+    path: &Path,
+    uid: Option<u32>,
+    gid: Option<u32>,
+    recursive: bool,
+) -> std::io::Result<()> {
     let owner = uid.unwrap_or(u32::MAX);
     let group = gid.unwrap_or(u32::MAX);
-    let targets = if recursive { walk(path)? } else { vec![path.to_path_buf()] };
+    let targets = if recursive {
+        walk(path)?
+    } else {
+        vec![path.to_path_buf()]
+    };
     for target in &targets {
         chown_path(target, owner, group)?;
     }
@@ -108,5 +123,8 @@ fn chown_path(path: &Path, owner: u32, group: u32) -> std::io::Result<()> {
 
 #[cfg(not(unix))]
 fn chown_path(_path: &Path, _owner: u32, _group: u32) -> std::io::Result<()> {
-    Err(std::io::Error::new(std::io::ErrorKind::Unsupported, "chown not available on this target"))
+    Err(std::io::Error::new(
+        std::io::ErrorKind::Unsupported,
+        "chown not available on this target",
+    ))
 }

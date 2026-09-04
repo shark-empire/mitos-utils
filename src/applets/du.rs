@@ -34,7 +34,11 @@ pub fn run(args: Vec<String>) -> AppResult<()> {
         match du_one(path, summarize) {
             Ok(sizes) => {
                 for (p, size) in sizes {
-                    let rendered = if human { human_size(size) } else { size.to_string() };
+                    let rendered = if human {
+                        human_size(size)
+                    } else {
+                        size.to_string()
+                    };
                     println!("{:<10} {}", rendered, p.display());
                 }
             }

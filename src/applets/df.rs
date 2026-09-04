@@ -44,9 +44,16 @@ pub const USAGE: &str = "df [PATH...] -- report filesystem space usage (Linux)";
 
 #[cfg(target_os = "linux")]
 pub fn run(args: Vec<String>) -> AppResult<()> {
-    let targets = if args.is_empty() { vec![".".to_string()] } else { args };
+    let targets = if args.is_empty() {
+        vec![".".to_string()]
+    } else {
+        args
+    };
 
-    println!("{:<20} {:>10} {:>10} {:>10}  {}", "Filesystem", "Size", "Used", "Avail", "Mounted on");
+    println!(
+        "{:<20} {:>10} {:>10} {:>10}  {}",
+        "Filesystem", "Size", "Used", "Avail", "Mounted on"
+    );
 
     let mut had_error = false;
     for target in &targets {
@@ -55,7 +62,11 @@ pub fn run(args: Vec<String>) -> AppResult<()> {
                 let used = total.saturating_sub(avail);
                 println!(
                     "{:<20} {:>10} {:>10} {:>10}  {}",
-                    "-", human_size(total), human_size(used), human_size(avail), target
+                    "-",
+                    human_size(total),
+                    human_size(used),
+                    human_size(avail),
+                    target
                 );
             }
             Err(err) => {
@@ -81,7 +92,11 @@ fn statvfs_of(path: &str) -> std::io::Result<(u64, u64)> {
     if result != 0 {
         return Err(std::io::Error::last_os_error());
     }
-    let block_size = if buf.f_frsize > 0 { buf.f_frsize } else { buf.f_bsize };
+    let block_size = if buf.f_frsize > 0 {
+        buf.f_frsize
+    } else {
+        buf.f_bsize
+    };
     Ok((buf.f_blocks * block_size, buf.f_bavail * block_size))
 }
 

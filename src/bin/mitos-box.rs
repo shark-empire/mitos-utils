@@ -57,7 +57,9 @@ fn main() -> ExitCode {
     ExitCode::from(0)
 }
 
-fn find(name: &str) -> Option<&'static (&'static str, &'static str, mitos_utils::applets::AppletFn)> {
+fn find(
+    name: &str,
+) -> Option<&'static (&'static str, &'static str, mitos_utils::applets::AppletFn)> {
     APPLETS.iter().find(|(n, _, _)| *n == name)
 }
 

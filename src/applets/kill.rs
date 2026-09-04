@@ -60,5 +60,7 @@ fn send_all(pids: &[i32], signal: i32) -> AppResult<()> {
 
 #[cfg(not(unix))]
 fn send_all(_pids: &[i32], _signal: i32) -> AppResult<()> {
-    Err(AppError::new("signal delivery not available on this target"))
+    Err(AppError::new(
+        "signal delivery not available on this target",
+    ))
 }

@@ -72,14 +72,18 @@ fn chmod_one(path: &Path, spec: &str, recursive: bool) -> std::io::Result<()> {
         });
     }
     let current = fs::metadata(path)?.permissions().mode() & 0o7777;
-    let new_mode =
-        parse_mode(spec, current).map_err(|e| std::io::Error::new(std::io::ErrorKind::InvalidInput, e))?;
+    let new_mode = parse_mode(spec, current)
+        .map_err(|e| std::io::Error::new(std::io::ErrorKind::InvalidInput, e))?;
     fs::set_permissions(path, fs::Permissions::from_mode(new_mode))
 }
 
 #[cfg(not(target_os = "linux"))]
 fn chmod_one(path: &Path, spec: &str, recursive: bool) -> std::io::Result<()> {
-    let targets = if recursive { walk(path)? } else { vec![path.to_path_buf()] };
+    let targets = if recursive {
+        walk(path)?
+    } else {
+        vec![path.to_path_buf()]
+    };
     for target in &targets {
         let current = fs::metadata(target)?.permissions().mode() & 0o7777;
         let new_mode = parse_mode(spec, current)

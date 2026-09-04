@@ -23,12 +23,25 @@ pub fn run(args: Vec<String>) -> AppResult<()> {
 
     while let Some(arg) = args.next() {
         if arg == "-n" {
-            let n = args.next().ok_or_else(|| AppError::usage("option '-n' requires an argument"))?;
-            mode = Mode::Lines(n.parse().map_err(|_| AppError::usage(format!("invalid number: '{}'", n)))?);
+            let n = args
+                .next()
+                .ok_or_else(|| AppError::usage("option '-n' requires an argument"))?;
+            mode = Mode::Lines(
+                n.parse()
+                    .map_err(|_| AppError::usage(format!("invalid number: '{}'", n)))?,
+            );
         } else if arg == "-c" {
-            let n = args.next().ok_or_else(|| AppError::usage("option '-c' requires an argument"))?;
-            mode = Mode::Bytes(n.parse().map_err(|_| AppError::usage(format!("invalid number: '{}'", n)))?);
-        } else if let Some(n) = arg.strip_prefix('-').filter(|s| s.chars().all(|c| c.is_ascii_digit()) && !s.is_empty()) {
+            let n = args
+                .next()
+                .ok_or_else(|| AppError::usage("option '-c' requires an argument"))?;
+            mode = Mode::Bytes(
+                n.parse()
+                    .map_err(|_| AppError::usage(format!("invalid number: '{}'", n)))?,
+            );
+        } else if let Some(n) = arg
+            .strip_prefix('-')
+            .filter(|s| s.chars().all(|c| c.is_ascii_digit()) && !s.is_empty())
+        {
             mode = Mode::Lines(n.parse().unwrap_or(10));
         } else {
             files.push(arg);
