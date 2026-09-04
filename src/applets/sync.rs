@@ -3,7 +3,6 @@
 
 use crate::common::errors::AppResult;
 
-
 #[cfg(unix)]
 mod ffi {
     extern "C" {
