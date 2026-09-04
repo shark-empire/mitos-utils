@@ -1,4 +1,4 @@
-name: Auto Format Bot 🤖
+name: Auto Format Bot
 
 on:
   push:               # runs on every push to any branch
