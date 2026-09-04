@@ -1,4 +1,4 @@
-name: CI utils
+name: CI-utils
 
 on:
   push:
