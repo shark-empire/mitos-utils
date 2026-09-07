@@ -1,4 +1,4 @@
-name: CI-utils test
+name: CI-utils-test
 
 on:
   push:
