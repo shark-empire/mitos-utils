@@ -90,7 +90,6 @@ fn double_dash_allows_operating_on_a_dash_prefixed_filename() {
         String::from_utf8_lossy(&out.stderr)
     );
     assert_eq!(stdout_of(&out), "content");
-
 }
 
 #[test]
