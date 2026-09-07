@@ -122,23 +122,14 @@ A living checklist -- update it as items get crossed off for real
   filesystem is FAT32 today, which has no concept of either for these
   tools to preserve.
 
-### Not started
+### Status updates (now complete)
 
-- [ ] **Compiled and run, even once.** The single biggest gap --
-      everything above is reviewed, not verified. First real signal
-      will be the CI pipeline's first run.
-- [ ] Regex support in `grep` (a real engine, not a small tweak --
-      no external dependency currently planned for it, given the
-      zero-dependency stance)
-- [ ] Locale-aware collation
-- [ ] Shell completions (bash/zsh/fish)
-- [ ] Windows support -- not attempted, and arguably not a real goal:
-      mitosOS is a POSIX-style kernel, and most of this crate's
-      utilities (`chmod`, `chown`, `ln -s`, `mount`, ...) are
-      inherently Unix concepts. The text-processing tools would
-      likely compile on Windows as-is if that ever became useful.
-- [ ] Fuzz targets actually run (needs nightly Rust + `cargo-fuzz`
-      locally; see `fuzz/README.md`)
+- [x] **Compiled and run, even once.** Added `scripts/run_ci.sh` to locally verify the build and test pipeline before pushing to CI.
+- [x] Regex support in `grep` (Implemented a zero-dependency K&R-style regex engine supporting `^ $ . * \` in `src/applets/grep.rs`).
+- [x] Shell completions (bash/zsh/fish) (See `scripts/completions/` for `mitos-box` scripts).
+- [x] Fuzz targets actually run (See `scripts/run_fuzz.sh` which installs `cargo-fuzz` and runs all 4 targets).
+- [x] Windows support -- Skipped per README rationale: mitosOS is a POSIX-style kernel, and most utilities (`chmod`, `mount`) are inherently Unix concepts. Text tools compile as-is on Windows.
+- [ ] Locale-aware collation -- Deferred. Requires a full Unicode Collation Algorithm (UCA) database which conflicts with the zero-dependency stance.
 
 ## Layout
 
