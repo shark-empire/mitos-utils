@@ -1,16 +1,18 @@
-//! `grep` -- print lines matching a pattern. Supports `-i`
+//! `grep` -- print lines matching a pattern.
+//!
+//! Supports `-E` (regex, default), `-F` (fixed string), `-i`
 //! (case-insensitive), `-v` (invert match), `-n` (print line
-//! numbers), and plain substring/basic patterns (no full regex --
-//! see docs/compatibility.md).
+//! numbers), and plain substring/basic patterns.
 
 use crate::common::args::split_dashdash;
 use crate::common::errors::{AppError, AppResult};
 use crate::common::output::{error_path, stdout_writer};
 use std::io::{self, BufRead, BufReader, Write};
 
-pub const USAGE: &str = "grep [-i] [-v] [-n] PATTERN [FILE...] -- print matching lines";
+pub const USAGE: &str = "grep [-E|-F] [-i] [-v] [-n] PATTERN [FILE...] -- print matching lines";
 
 pub fn run(args: Vec<String>) -> AppResult<()> {
+    let mut fixed_string = false;
     let mut ignore_case = false;
     let mut invert = false;
     let mut show_line_numbers = false;
@@ -19,6 +21,8 @@ pub fn run(args: Vec<String>) -> AppResult<()> {
     let (opts, forced) = split_dashdash(args);
     for arg in opts {
         match arg.as_str() {
+            "-E" => fixed_string = false, // Default is regex
+            "-F" => fixed_string = true,
             "-i" => ignore_case = true,
             "-v" => invert = true,
             "-n" => show_line_numbers = true,
@@ -28,16 +32,11 @@ pub fn run(args: Vec<String>) -> AppResult<()> {
     rest.extend(forced);
     if rest.is_empty() {
         return Err(AppError::usage(
-            "usage: grep [-i] [-v] [-n] PATTERN [FILE]...",
+            "usage: grep [-E|-F] [-i] [-v] [-n] PATTERN [FILE]...",
         ));
     }
 
     let pattern = rest.remove(0);
-    let pattern_cmp = if ignore_case {
-        pattern.to_lowercase()
-    } else {
-        pattern.clone()
-    };
     let files = rest;
     let sources: Vec<String> = if files.is_empty() {
         vec!["-".to_string()]
@@ -45,6 +44,13 @@ pub fn run(args: Vec<String>) -> AppResult<()> {
         files
     };
     let multiple = sources.len() > 1;
+
+    // Pre-compile pattern for regex matching
+    let pattern_chars: Vec<char> = if ignore_case {
+        pattern.to_lowercase().chars().collect()
+    } else {
+        pattern.chars().collect()
+    };
 
     let mut out = stdout_writer();
     let mut had_error = false;
@@ -65,18 +71,21 @@ pub fn run(args: Vec<String>) -> AppResult<()> {
         };
 
         for (i, line) in reader.lines().flatten().enumerate() {
-            // Case-sensitive matching (the common case) borrows
-            // `line` directly instead of cloning it just to call
-            // `.contains()` -- the clone bought nothing here, since
-            // `str::contains` never needed an owned copy in the
-            // first place. Case-insensitive matching still needs one
-            // `to_lowercase()` allocation; there's no folding it away
-            // without full Unicode case-folding support.
-            let is_match = if ignore_case {
-                line.to_lowercase().contains(&pattern_cmp)
+            let is_match = if fixed_string {
+                if ignore_case {
+                    line.to_lowercase().contains(&pattern.to_lowercase())
+                } else {
+                    line.contains(&pattern)
+                }
             } else {
-                line.contains(&pattern_cmp)
+                let text_chars: Vec<char> = if ignore_case {
+                    line.to_lowercase().chars().collect()
+                } else {
+                    line.chars().collect()
+                };
+                match_regex(&pattern_chars, &text_chars)
             };
+
             if is_match != invert {
                 matched_any = true;
                 if multiple {
@@ -98,5 +107,72 @@ pub fn run(args: Vec<String>) -> AppResult<()> {
         Err(AppError::silent(1))
     } else {
         Ok(())
+    }
+}
+
+// --- Zero-dependency Regex Engine ---
+
+fn match_here(regexp: &[char], text: &[char]) -> bool {
+    if regexp.is_empty() {
+        return true;
+    }
+    
+    let mut current = regexp[0];
+    let mut next_is_star = false;
+    let mut rest_regexp = &regexp[1..];
+    
+    if !rest_regexp.is_empty() && rest_regexp[0] == '*' {
+        next_is_star = true;
+        rest_regexp = &rest_regexp[1..];
+    } else if current == '\\' && !rest_regexp.is_empty() {
+        current = rest_regexp[0];
+        rest_regexp = &rest_regexp[1..];
+        if !rest_regexp.is_empty() && rest_regexp[0] == '*' {
+            next_is_star = true;
+            rest_regexp = &rest_regexp[1..];
+        }
+    }
+
+    if next_is_star {
+        return match_star(current, rest_regexp, text);
+    }
+    
+    if current == '$' && rest_regexp.is_empty() {
+        return text.is_empty();
+    }
+    
+    if !text.is_empty() && (current == '.' || current == text[0]) {
+        return match_here(rest_regexp, &text[1..]);
+    }
+    
+    false
+}
+
+fn match_star(c: char, regexp: &[char], text: &[char]) -> bool {
+    let mut t = text;
+    loop {
+        if match_here(regexp, t) {
+            return true;
+        }
+        if t.is_empty() || (c != '.' && c != t[0]) {
+            return false;
+        }
+        t = &t[1..];
+    }
+}
+
+fn match_regex(regexp: &[char], text: &[char]) -> bool {
+    if !regexp.is_empty() && regexp[0] == '^' {
+        return match_here(&regexp[1..], text);
+    }
+    let mut t = text;
+    loop {
+        if match_here(regexp, t) {
+            return true;
+        }
+        if t.is_empty() {
+            return false;
+        }
+        t = &t[1..];
     }
 }
