@@ -3,8 +3,8 @@
 //! this crate's line-mode text tools), and stdin.
 
 use crate::common::errors::{AppError, AppResult};
-use crate::common::output::error_path;
-use std::io::{self, BufRead, BufReader, Read};
+use crate::common::output::{error_path, stdout_writer};
+use std::io::{self, BufRead, BufReader, Read, Write};
 
 enum Mode {
     Lines(usize),
@@ -51,12 +51,13 @@ pub fn run(args: Vec<String>) -> AppResult<()> {
 
     let multiple = files.len() > 1;
     let mut had_error = false;
+    let mut out = stdout_writer();
     for (i, path) in files.iter().enumerate() {
         if multiple {
             if i > 0 {
-                println!();
+                let _ = writeln!(out);
             }
-            println!("==> {} <==", path);
+            let _ = writeln!(out, "==> {} <==", path);
         }
         let opened: Box<dyn Read> = if path == "-" {
             Box::new(io::stdin())
@@ -74,16 +75,15 @@ pub fn run(args: Vec<String>) -> AppResult<()> {
         match mode {
             Mode::Lines(count) => {
                 for line in BufReader::new(opened).lines().take(count).flatten() {
-                    println!("{}", line);
+                    let _ = writeln!(out, "{}", line);
                 }
             }
             Mode::Bytes(count) => {
-                let stdout = io::stdout();
-                let mut out = stdout.lock();
                 let _ = io::copy(&mut opened.take(count as u64), &mut out);
             }
         }
     }
+    let _ = out.flush();
 
     if had_error {
         Err(AppError::silent(1))

@@ -5,9 +5,10 @@
 //! instead of every subdirectory).
 
 use crate::common::errors::{AppError, AppResult};
-use crate::common::output::{error_path, human_size};
+use crate::common::output::{error_path, human_size, stdout_writer};
 use crate::common::paths::walk;
 use std::collections::BTreeMap;
+use std::io::Write;
 use std::path::{Path, PathBuf};
 
 pub const USAGE: &str = "du [-h] [-s] [PATH...] -- estimate directory space usage";
@@ -29,6 +30,7 @@ pub fn run(args: Vec<String>) -> AppResult<()> {
     }
 
     let mut had_error = false;
+    let mut out = stdout_writer();
     for target in &targets {
         let path = Path::new(target);
         match du_one(path, summarize) {
@@ -39,7 +41,7 @@ pub fn run(args: Vec<String>) -> AppResult<()> {
                     } else {
                         size.to_string()
                     };
-                    println!("{:<10} {}", rendered, p.display());
+                    let _ = writeln!(out, "{:<10} {}", rendered, p.display());
                 }
             }
             Err(err) => {
@@ -48,6 +50,7 @@ pub fn run(args: Vec<String>) -> AppResult<()> {
             }
         }
     }
+    let _ = out.flush();
 
     if had_error {
         Err(AppError::silent(1))
@@ -61,27 +64,37 @@ pub fn run(args: Vec<String>) -> AppResult<()> {
 /// each annotated with the size of everything beneath it.
 fn du_one(root: &Path, summarize: bool) -> std::io::Result<Vec<(PathBuf, u64)>> {
     let entries = walk(root)?;
-    let mut file_sizes: BTreeMap<PathBuf, u64> = BTreeMap::new();
-    for entry in &entries {
-        let meta = std::fs::symlink_metadata(entry)?;
-        if meta.is_file() {
-            file_sizes.insert(entry.clone(), meta.len());
-        }
-    }
-
     let mut dir_totals: BTreeMap<PathBuf, u64> = BTreeMap::new();
     for entry in &entries {
         if entry.is_dir() {
-            dir_totals.insert(entry.clone(), 0);
+            dir_totals.entry(entry.clone()).or_insert(0);
         }
     }
     dir_totals.entry(root.to_path_buf()).or_insert(0);
 
-    for (file, size) in &file_sizes {
-        for (dir, total) in dir_totals.iter_mut() {
-            if file.starts_with(dir) {
+    // Add each file's size to every ancestor directory's running
+    // total by walking up its own parent chain, instead of the
+    // previous approach of comparing every file against every
+    // directory in the tree (`for file { for dir { .. } }`, an
+    // O(files * directories) scan). Walking ancestors is
+    // O(files * depth) -- for a wide tree with many top-level
+    // directories but only a handful of nesting levels, that's a
+    // very different growth curve.
+    for entry in &entries {
+        let meta = std::fs::symlink_metadata(entry)?;
+        if !meta.is_file() {
+            continue;
+        }
+        let size = meta.len();
+        let mut dir = entry.parent();
+        while let Some(d) = dir {
+            if let Some(total) = dir_totals.get_mut(d) {
                 *total += size;
             }
+            if d == root {
+                break;
+            }
+            dir = d.parent();
         }
     }
 

@@ -4,10 +4,11 @@
 
 use crate::common::args::split_dashdash;
 use crate::common::errors::{AppError, AppResult};
-use crate::common::output::{columnate, error_path, human_size};
+use crate::common::output::{columnate, error_path, human_size, stdout_writer};
 #[cfg(unix)]
 use crate::common::permissions::{file_type_char, format_mode, mode_of};
 use std::fs;
+use std::io::Write;
 use std::path::Path;
 
 pub const USAGE: &str = "ls [-a] [-l] [-h] [PATH...] -- list directory contents";
@@ -43,18 +44,27 @@ pub fn run(args: Vec<String>) -> AppResult<()> {
 
     let mut had_error = false;
     let multiple = targets.len() > 1;
+    // One buffered handle for the entire invocation -- header lines,
+    // long-format rows, and columnated names for every target all
+    // funnel through it, so a directory listing with thousands of
+    // entries (or `ls` given many path arguments) does a handful of
+    // `write(2)` calls total instead of one per line. See
+    // `common::output::stdout_writer`'s doc comment for why that
+    // matters given `Stdout`'s own internal line-buffering.
+    let mut out = stdout_writer();
     for (i, target) in targets.iter().enumerate() {
         if multiple {
             if i > 0 {
-                println!();
+                let _ = writeln!(out);
             }
-            println!("{}:", target);
+            let _ = writeln!(out, "{}:", target);
         }
-        if let Err(err) = list_one(target, show_all, long, human) {
+        if let Err(err) = list_one(target, show_all, long, human, &mut out) {
             error_path("ls", target, err);
             had_error = true;
         }
     }
+    let _ = out.flush();
 
     if had_error {
         Err(AppError::silent(1))
@@ -63,11 +73,20 @@ pub fn run(args: Vec<String>) -> AppResult<()> {
     }
 }
 
-fn list_one(target: &str, show_all: bool, long: bool, human: bool) -> std::io::Result<()> {
+fn list_one(
+    target: &str,
+    show_all: bool,
+    long: bool,
+    human: bool,
+    out: &mut impl Write,
+) -> std::io::Result<()> {
     let path = Path::new(target);
     let meta = fs::symlink_metadata(path)?;
     if !meta.is_dir() {
-        print_entry(target, path, long, human);
+        // Single non-directory target: `meta` was already fetched
+        // above to check `is_dir()`, so hand it straight to
+        // `print_entry` instead of statting the same path again.
+        print_entry(target, long, human, Some(&meta), out);
         return Ok(());
     }
 
@@ -84,28 +103,35 @@ fn list_one(target: &str, show_all: bool, long: bool, human: bool) -> std::io::R
 
     if long {
         for name in &names {
-            print_entry(name, &path.join(name), true, human);
+            let entry_meta = fs::symlink_metadata(path.join(name)).ok();
+            print_entry(name, true, human, entry_meta.as_ref(), out);
         }
     } else {
-        columnate(&names, 80);
+        columnate(&names, 80, out);
     }
     Ok(())
 }
 
-fn print_entry(display_name: &str, full_path: &Path, long: bool, human: bool) {
+fn print_entry(
+    display_name: &str,
+    long: bool,
+    human: bool,
+    meta: Option<&fs::Metadata>,
+    out: &mut impl Write,
+) {
     if !long {
-        println!("{}", display_name);
+        let _ = writeln!(out, "{}", display_name);
         return;
     }
-    let Ok(meta) = fs::symlink_metadata(full_path) else {
-        println!("?????????? ? ? ? ? {}", display_name);
+    let Some(meta) = meta else {
+        let _ = writeln!(out, "?????????? ? ? ? ? {}", display_name);
         return;
     };
 
     #[cfg(unix)]
     {
         use std::os::unix::fs::MetadataExt;
-        let mode_str = format_mode(mode_of(&meta), file_type_char(&meta));
+        let mode_str = format_mode(mode_of(meta), file_type_char(meta));
         let owner = crate::common::users::name_for_uid(meta.uid())
             .unwrap_or_else(|| meta.uid().to_string());
         let group = crate::common::users::name_for_gid(meta.gid())
@@ -115,7 +141,8 @@ fn print_entry(display_name: &str, full_path: &Path, long: bool, human: bool) {
         } else {
             meta.len().to_string()
         };
-        println!(
+        let _ = writeln!(
+            out,
             "{} {:>3} {:<8} {:<8} {:>8} {}",
             mode_str,
             meta.nlink(),
@@ -132,6 +159,6 @@ fn print_entry(display_name: &str, full_path: &Path, long: bool, human: bool) {
         } else {
             meta.len().to_string()
         };
-        println!("{:>10} {}", size, display_name);
+        let _ = writeln!(out, "{:>10} {}", size, display_name);
     }
 }

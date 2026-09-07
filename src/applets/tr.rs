@@ -4,6 +4,7 @@
 //! docs/compatibility.md).
 
 use crate::common::errors::{AppError, AppResult};
+use std::collections::{HashMap, HashSet};
 use std::io::{self, Read, Write};
 
 pub const USAGE: &str = "tr SET1 SET2 | tr -d SET1 -- translate or delete characters on stdin";
@@ -31,7 +32,8 @@ pub fn run(args: Vec<String>) -> AppResult<()> {
             .first()
             .map(|s| s.chars().collect())
             .unwrap_or_default();
-        write!(out, "{}", delete_chars(&input, &set1)).map_err(AppError::from)?;
+        out.write_all(delete_chars(&input, &set1).as_bytes())
+            .map_err(AppError::from)?;
         return Ok(());
     }
 
@@ -40,14 +42,22 @@ pub fn run(args: Vec<String>) -> AppResult<()> {
     }
     let set1: Vec<char> = rest[0].chars().collect();
     let set2: Vec<char> = rest[1].chars().collect();
-    write!(out, "{}", translate(&input, &set1, &set2)).map_err(AppError::from)?;
+    out.write_all(translate(&input, &set1, &set2).as_bytes())
+        .map_err(AppError::from)?;
     Ok(())
 }
 
 /// Remove every character in `set1` from `input`. Standalone (used
 /// by both `run` and `fuzz/fuzz_targets/tr_translate.rs`).
+///
+/// Builds a `HashSet` from `set1` once up front so membership is an
+/// O(1) average-case lookup per input character instead of the O(k)
+/// linear scan a plain `.contains()` on a `Vec` would do -- for a
+/// large `set1` (or a large input) that's the difference between
+/// O(n) and O(n * k) overall.
 pub fn delete_chars(input: &str, set1: &[char]) -> String {
-    input.chars().filter(|c| !set1.contains(c)).collect()
+    let remove: HashSet<char> = set1.iter().copied().collect();
+    input.chars().filter(|c| !remove.contains(c)).collect()
 }
 
 /// Map each character of `input` that appears in `set1` to the
@@ -58,12 +68,26 @@ pub fn delete_chars(input: &str, set1: &[char]) -> String {
 /// `fuzz/fuzz_targets/tr_translate.rs` -- character-set indexing
 /// logic like `set2.last()` is an easy place to get an off-by-one
 /// wrong, worth fuzzing rather than only hand-testing).
+///
+/// Builds a `HashMap<char, char>` from `set1`/`set2` once up front
+/// (same reasoning as `delete_chars`): each input character is then
+/// one O(1) average-case lookup instead of an O(k) scan of `set1`.
 pub fn translate(input: &str, set1: &[char], set2: &[char]) -> String {
+    let fallback = set2.last().copied();
+    let mut table: HashMap<char, char> = HashMap::with_capacity(set1.len());
+    for (idx, &s) in set1.iter().enumerate() {
+        if table.contains_key(&s) {
+            // First occurrence in `set1` wins -- matches the
+            // original `.position()`-based lookup, which always
+            // found the *first* matching index too.
+            continue;
+        }
+        if let Some(mapped) = set2.get(idx).copied().or(fallback) {
+            table.insert(s, mapped);
+        }
+    }
     input
         .chars()
-        .map(|c| match set1.iter().position(|&s| s == c) {
-            Some(idx) => *set2.get(idx).or_else(|| set2.last()).unwrap_or(&c),
-            None => c,
-        })
+        .map(|c| table.get(&c).copied().unwrap_or(c))
         .collect()
 }

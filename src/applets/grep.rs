@@ -5,8 +5,8 @@
 
 use crate::common::args::split_dashdash;
 use crate::common::errors::{AppError, AppResult};
-use crate::common::output::error_path;
-use std::io::{self, BufRead, BufReader};
+use crate::common::output::{error_path, stdout_writer};
+use std::io::{self, BufRead, BufReader, Write};
 
 pub const USAGE: &str = "grep [-i] [-v] [-n] PATTERN [FILE...] -- print matching lines";
 
@@ -46,6 +46,7 @@ pub fn run(args: Vec<String>) -> AppResult<()> {
     };
     let multiple = sources.len() > 1;
 
+    let mut out = stdout_writer();
     let mut had_error = false;
     let mut matched_any = false;
 
@@ -64,28 +65,33 @@ pub fn run(args: Vec<String>) -> AppResult<()> {
         };
 
         for (i, line) in reader.lines().flatten().enumerate() {
-            let hay = if ignore_case {
-                line.to_lowercase()
+            // Case-sensitive matching (the common case) borrows
+            // `line` directly instead of cloning it just to call
+            // `.contains()` -- the clone bought nothing here, since
+            // `str::contains` never needed an owned copy in the
+            // first place. Case-insensitive matching still needs one
+            // `to_lowercase()` allocation; there's no folding it away
+            // without full Unicode case-folding support.
+            let is_match = if ignore_case {
+                line.to_lowercase().contains(&pattern_cmp)
             } else {
-                line.clone()
+                line.contains(&pattern_cmp)
             };
-            let is_match = hay.contains(&pattern_cmp);
             if is_match != invert {
                 matched_any = true;
-                let prefix = if multiple {
-                    format!("{}:", path)
-                } else {
-                    String::new()
-                };
+                if multiple {
+                    let _ = write!(out, "{}:", path);
+                }
                 if show_line_numbers {
-                    println!("{}{}:{}", prefix, i + 1, line);
+                    let _ = writeln!(out, "{}:{}", i + 1, line);
                 } else {
-                    println!("{}{}", prefix, line);
+                    let _ = writeln!(out, "{}", line);
                 }
             }
         }
     }
 
+    let _ = out.flush();
     if had_error {
         Err(AppError::silent(2))
     } else if !matched_any {

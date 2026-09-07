@@ -8,8 +8,8 @@
 //! same either way.
 
 use crate::common::errors::{AppError, AppResult};
-use crate::common::output::error_path;
-use std::io::{self, Read};
+use crate::common::output::{error_path, stdout_writer};
+use std::io::{self, Read, Write};
 
 const CHUNK_SIZE: usize = 64 * 1024;
 
@@ -48,6 +48,7 @@ pub fn run(args: Vec<String>) -> AppResult<()> {
     let mut total = Counts::default();
     let multiple = files.len() > 1;
     let mut had_error = false;
+    let mut out = stdout_writer();
 
     for path in &files {
         let counts = if path == "-" {
@@ -70,6 +71,7 @@ pub fn run(args: Vec<String>) -> AppResult<()> {
             }
         };
         print_counts(
+            &mut out,
             &counts,
             show_lines,
             show_words,
@@ -83,8 +85,11 @@ pub fn run(args: Vec<String>) -> AppResult<()> {
     }
 
     if multiple {
-        print_counts(&total, show_lines, show_words, show_bytes, "total", true);
+        print_counts(
+            &mut out, &total, show_lines, show_words, show_bytes, "total", true,
+        );
     }
+    let _ = out.flush();
 
     if had_error {
         Err(AppError::silent(1))
@@ -122,7 +127,15 @@ fn count_stream<R: Read>(mut reader: R) -> io::Result<Counts> {
     Ok(counts)
 }
 
-fn print_counts(c: &Counts, l: bool, w: bool, b: bool, label: &str, show_label: bool) {
+fn print_counts(
+    out: &mut impl Write,
+    c: &Counts,
+    l: bool,
+    w: bool,
+    b: bool,
+    label: &str,
+    show_label: bool,
+) {
     let mut parts = Vec::new();
     if l {
         parts.push(format!("{:>7}", c.lines));
@@ -134,8 +147,8 @@ fn print_counts(c: &Counts, l: bool, w: bool, b: bool, label: &str, show_label: 
         parts.push(format!("{:>7}", c.bytes));
     }
     if show_label {
-        println!("{} {}", parts.join(""), label);
+        let _ = writeln!(out, "{} {}", parts.join(""), label);
     } else {
-        println!("{}", parts.join(""));
+        let _ = writeln!(out, "{}", parts.join(""));
     }
 }

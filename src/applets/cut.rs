@@ -3,7 +3,8 @@
 //! like `1,3-5`).
 
 use crate::common::errors::{AppError, AppResult};
-use std::io::{self, BufRead};
+use crate::common::output::stdout_writer;
+use std::io::{self, BufRead, Write};
 
 pub const USAGE: &str = "cut -d DELIM -f LIST [FILE...] -- extract fields from each line";
 
@@ -38,6 +39,7 @@ pub fn run(args: Vec<String>) -> AppResult<()> {
         files.push("-".to_string());
     }
 
+    let mut out = stdout_writer();
     for path in &files {
         let reader: Box<dyn BufRead> = if path == "-" {
             Box::new(io::BufReader::new(io::stdin()))
@@ -48,13 +50,26 @@ pub fn run(args: Vec<String>) -> AppResult<()> {
         };
         for line in reader.lines().flatten() {
             let parts: Vec<&str> = line.split(delimiter).collect();
-            let selected: Vec<&str> = fields
-                .iter()
-                .filter_map(|&f| parts.get(f.saturating_sub(1)).copied())
-                .collect();
-            println!("{}", selected.join(&delimiter.to_string()));
+            // Write selected fields straight to the buffered output
+            // instead of collecting them into a `Vec<&str>` and
+            // `.join()`-ing it -- `.join()` needed its own fresh
+            // `String` (and, on top of that, `delimiter.to_string()`
+            // just to get a `&str` separator) on every single line.
+            let mut first = true;
+            for &f in &fields {
+                let Some(part) = parts.get(f.saturating_sub(1)).copied() else {
+                    continue;
+                };
+                if !first {
+                    let _ = write!(out, "{}", delimiter);
+                }
+                let _ = write!(out, "{}", part);
+                first = false;
+            }
+            let _ = writeln!(out);
         }
     }
+    let _ = out.flush();
     Ok(())
 }
 

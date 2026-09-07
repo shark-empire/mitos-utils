@@ -5,8 +5,8 @@
 //! stdin.
 
 use crate::common::errors::{AppError, AppResult};
-use crate::common::output::error_path;
-use std::io::{self, BufRead, BufReader};
+use crate::common::output::{error_path, stdout_writer};
+use std::io::{self, BufRead, BufReader, Write};
 
 pub const USAGE: &str =
     "sort [-r] [-n] [-u] [-k N] [-t DELIM] [FILE...] -- sort lines (optionally by field N)";
@@ -84,14 +84,29 @@ pub fn run(args: Vec<String>) -> AppResult<()> {
         }
     };
 
+    // Decorate-sort-undecorate: compute each line's sort key --
+    // and, for `-n`, its parsed numeric value -- exactly once up
+    // front, instead of recomputing (and, in the numeric case,
+    // reparsing a float) it on every comparison a naive `sort_by`
+    // makes. For N lines that's O(N) key extractions instead of
+    // O(N log N) of them, which matters a lot once N gets large.
     if numeric {
-        lines.sort_by(|a, b| {
-            let na: f64 = key_of(a).trim().parse().unwrap_or(0.0);
-            let nb: f64 = key_of(b).trim().parse().unwrap_or(0.0);
-            na.partial_cmp(&nb).unwrap_or(std::cmp::Ordering::Equal)
-        });
+        let mut decorated: Vec<(f64, String)> = lines
+            .into_iter()
+            .map(|line| {
+                let key: f64 = key_of(&line).trim().parse().unwrap_or(0.0);
+                (key, line)
+            })
+            .collect();
+        decorated.sort_by(|a, b| a.0.partial_cmp(&b.0).unwrap_or(std::cmp::Ordering::Equal));
+        lines = decorated.into_iter().map(|(_, line)| line).collect();
     } else {
-        lines.sort_by(|a, b| key_of(a).cmp(&key_of(b)));
+        let mut decorated: Vec<(String, String)> = lines
+            .into_iter()
+            .map(|line| (key_of(&line), line))
+            .collect();
+        decorated.sort_by(|a, b| a.0.cmp(&b.0));
+        lines = decorated.into_iter().map(|(_, line)| line).collect();
     }
     if reverse {
         lines.reverse();
@@ -100,9 +115,11 @@ pub fn run(args: Vec<String>) -> AppResult<()> {
         lines.dedup();
     }
 
+    let mut out = stdout_writer();
     for line in &lines {
-        println!("{}", line);
+        let _ = writeln!(out, "{}", line);
     }
+    let _ = out.flush();
 
     if had_error {
         Err(AppError::silent(1))
