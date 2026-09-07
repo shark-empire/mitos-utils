@@ -116,11 +116,11 @@ fn match_here(regexp: &[char], text: &[char]) -> bool {
     if regexp.is_empty() {
         return true;
     }
-    
+
     let mut current = regexp[0];
     let mut next_is_star = false;
     let mut rest_regexp = &regexp[1..];
-    
+
     if !rest_regexp.is_empty() && rest_regexp[0] == '*' {
         next_is_star = true;
         rest_regexp = &rest_regexp[1..];
@@ -136,15 +136,15 @@ fn match_here(regexp: &[char], text: &[char]) -> bool {
     if next_is_star {
         return match_star(current, rest_regexp, text);
     }
-    
+
     if current == '$' && rest_regexp.is_empty() {
         return text.is_empty();
     }
-    
+
     if !text.is_empty() && (current == '.' || current == text[0]) {
         return match_here(rest_regexp, &text[1..]);
     }
-    
+
     false
 }
 
