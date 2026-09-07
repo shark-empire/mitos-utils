@@ -21,18 +21,6 @@ itself, which doesn't have a userspace to host this crate on yet.
 actually compiles it. See `docs/architecture.md` for what that means
 and what's next.
 
-## Status
-
-Written and reviewed against a hosted Unix target (Linux) with the
-highest-risk FFI (`statvfs`, `mount`/`umount`, `klogctl`, and the
-TOCTOU-hardening flag values) cross-checked against real man
-pages/kernel headers via web search -- but not yet compiled (no Rust
-toolchain was available while writing it) or run against mitosOS
-itself, which doesn't have a userspace to host this crate on yet.
-`.github/workflows/ci.yml` will be the first environment that
-actually compiles it. See `docs/architecture.md` for what that means
-and what's next.
-
 ## What's done vs. what's left
 
 A living checklist -- update it as items get crossed off for real
@@ -42,8 +30,12 @@ A living checklist -- update it as items get crossed off for real
 
 - [x] All 50 utilities + `common` library (errors, output, paths,
       permissions, users)
-- [x] Zero dependencies in the main crate (`fuzz/` is the one
-      deliberate, isolated exception)
+- [x] Zero dependencies for the ~50 coreutils-style applets and
+      `common` (`fuzz/` is one deliberate, isolated exception).
+      `src/ipc.rs` (terminal/shell IPC, not one of the 50 utilities)
+      is the other -- it's what the other MITOS components use to
+      talk to this crate, and it needs `serde`/`serde_json`/`tokio`
+      for that.
 - [x] `--help` / `--version` on every command
 - [x] POSIX `--` end-of-options on every command that takes file/path
       arguments
@@ -63,6 +55,48 @@ A living checklist -- update it as items get crossed off for real
       overview pages (`man/man1/`, `man/man7/`)
 - [x] Integration API reference for other MITOS crates
       (`docs/integration.md`)
+- [x] Performance pass -- **written, not yet compiled/benchmarked**:
+      - Every line-oriented tool (`cat`, `grep`, `sort`, `uniq`,
+        `cut`, `wc`, `head`, `tail`, `ls`, `du`) now writes through
+        one shared, explicitly buffered stdout handle
+        (`common::output::stdout_writer`) instead of a bare
+        `println!`/`writeln!` per line. `std::io::Stdout` is
+        internally line-buffered *unconditionally* (even to a pipe
+        or file, not just a terminal), so a `println!`-per-line loop
+        was doing one `write(2)` syscall per line; this batches that
+        into one flush per ~64KB.
+      - `cat` and `tail` are now binary-safe: both work on raw bytes
+        and split only on the `\n` byte, never requiring valid UTF-8
+        (see docs/compatibility.md). `cat` with neither `-n` nor
+        `-b` is a single buffered byte copy per file, matching real
+        `cat`'s fast path. `tee` is also now binary-safe: it copies
+        stdin to stdout and every output file in large chunks
+        instead of decoding and re-emitting UTF-8 lines one
+        `writeln!` at a time (stdout is still flushed after every
+        chunk, so watching output live while it's also being logged
+        doesn't get stuck waiting for a full buffer).
+      - `tail -n`/`-c` seek backward from the end of a regular file
+        in chunks instead of reading the whole file, so `tail -n 10`
+        on a multi-gigabyte file only touches the last chunk or two.
+      - `sort` computes each line's sort key (and, for `-n`, its
+        parsed numeric value) once per line up front instead of
+        recomputing it on every comparison a naive `sort_by` makes
+        (O(N) key extractions instead of O(N log N)).
+      - `uniq` streams its input line by line instead of collecting
+        the whole file into a `Vec<String>` first.
+      - `tr` builds a `HashMap`/`HashSet` from its character sets
+        once instead of doing an O(k) linear scan per input
+        character.
+      - `du` accumulates each file's size into its ancestor
+        directories by walking up the parent chain (O(files *
+        depth)) instead of comparing every file against every
+        directory in the tree (O(files * directories)).
+      - `ls -l` on a single non-directory argument no longer
+        `stat`s the same path twice.
+      - Along the way, fixed a latent bug in `tail`'s ring-buffer
+        eviction (`-n 0`/`-c 0` used to print the whole input instead
+        of nothing, because the old buffer only trimmed when its
+        length was *exactly* equal to the requested count).
 
 ### Known limitations (by design, not bugs)
 
@@ -75,8 +109,9 @@ A living checklist -- update it as items get crossed off for real
   actual compile).
 - TOCTOU hardening (`common::safewalk`) is **Linux-only**; other
   targets fall back to an unhardened path-based walk.
-- Text tools are **not binary-safe** (UTF-8 line-oriented, not raw
-  bytes).
+- Most text tools are **not binary-safe** (UTF-8 line-oriented, not
+  raw bytes) -- `cat`, `tail`, and `tee` are exceptions, see the
+  performance pass above and docs/compatibility.md.
 - **No locale support** -- C-locale/byte-order behavior only; no
   `LC_COLLATE`-aware sorting, no multi-byte-aware character counting.
 - `grep` is **substring-only**, no regular expressions.
