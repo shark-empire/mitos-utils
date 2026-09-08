@@ -131,5 +131,3 @@ fn apply_symbolic_clause(clause: &str, mode: u32) -> Result<u32, String> {
 pub fn format_permissions(mode: u32) -> String {
     format_mode(mode, '-')
 }
-
-
