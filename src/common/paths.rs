@@ -95,3 +95,19 @@ pub fn walk_post_order(root: &Path) -> std::io::Result<Vec<PathBuf>> {
     all.sort_by_key(|p| std::cmp::Reverse(p.components().count()));
     Ok(all)
 }
+
+/// Expands a leading `~` to the user's home directory.
+pub fn expand_tilde(path: &str) -> PathBuf {
+    if path.starts_with('~') {
+        if let Some(home) = std::env::var_os("HOME") {
+            let home_path = PathBuf::from(home);
+            if path.len() == 1 {
+                return home_path;
+            } else if path.starts_with("~/") {
+                return home_path.join(&path[2..]);
+            }
+        }
+    }
+    PathBuf::from(path)
+}
+
