@@ -110,4 +110,3 @@ pub fn expand_tilde(path: &str) -> PathBuf {
     }
     PathBuf::from(path)
 }
-
