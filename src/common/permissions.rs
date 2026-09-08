@@ -126,3 +126,10 @@ fn apply_symbolic_clause(clause: &str, mode: u32) -> Result<u32, String> {
         _ => mode,
     })
 }
+/// Formats Unix permissions (e.g., "-rw-r--r--") defaulting to a regular file type ('-')
+/// when only the raw mode bits are available without full metadata.
+pub fn format_permissions(mode: u32) -> String {
+    format_mode(mode, '-')
+}
+
+
