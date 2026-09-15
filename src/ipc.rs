@@ -76,7 +76,7 @@ pub enum IpcRequest {
     NotifyUser { title: String, body: String },
     /// Terminal ➔ Network: Poll for captive portal or bandwidth status
     GetNetworkStatus,
- }
+}
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub enum IpcResponse {
@@ -93,10 +93,9 @@ pub enum IpcResponse {
         message: String,
     },
     NetworkStatus {
-    is_captive_portal: bool,
-    bandwidth_kbps: f32,
-   },
-
+        is_captive_portal: bool,
+        bandwidth_kbps: f32,
+    },
 }
 
 // ------------------------------------------------------------------
@@ -114,7 +113,6 @@ pub fn file_manager_socket() -> String {
 pub fn terminal_socket(pid: u32) -> String {
     format!("{}/mitos-term-{}.sock", runtime_dir(), pid)
 }
-
 
 pub fn gui_socket() -> String {
     format!("{}/mitos-gui.sock", runtime_dir())
