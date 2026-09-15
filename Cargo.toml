@@ -21,12 +21,12 @@ serde_json = "1.0"
 
 # Async Unix Domain Socket framing (ipc_send / ipc_recv over UnixStream)
 tokio = { version = "1.38", features = ["net", "io-util"] }
-
+arboard = "3.4"         
 # ── Optional: uncomment as src/common or src/applets grow ──────────────
-# dirs = "5.0"          # XDG home/config discovery
-# notify = "6.1"        # filesystem watching (theme/config hot-reload)
-# chrono = "0.4"        # timestamps for logs & execution blocks
-# thiserror = "1.0"     # ergonomic shared error types
+ dirs = "5.0"          # XDG home/config discovery
+ notify = "6.1"        # filesystem watching (theme/config hot-reload)
+ chrono = "0.4"        # timestamps for logs & execution blocks
+ thiserror = "1.0"     # ergonomic shared error types
 
 [dev-dependencies]
 # Full runtime + test utilities for integration tests of the IPC framing
