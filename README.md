@@ -114,7 +114,10 @@ A living checklist -- update it as items get crossed off for real
   performance pass above and docs/compatibility.md.
 - **No locale support** -- C-locale/byte-order behavior only; no
   `LC_COLLATE`-aware sorting, no multi-byte-aware character counting.
-- `grep` is **substring-only**, no regular expressions.
+- `grep`'s regex support (`-E`, the default) is a small hand-written
+  engine covering `^ $ . *` and backslash-escaping -- not full POSIX
+  ERE (no character classes, alternation, `+`/`?`, or `{n,m}`
+  repetition). `-F` still does plain substring matching.
 - `sort -k` supports a **single field**, not an `N,M` range.
 - `cp -p` doesn't preserve **nested subdirectory** mtimes inside a
   `-r` tree, only the root and individual files.
