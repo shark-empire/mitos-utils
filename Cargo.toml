@@ -2,15 +2,16 @@
 name = "mitos-utils"
 version = "0.1.0"
 edition = "2021"
+rust-version = "1.74"
 authors = ["shark-empire"]
-description = "Shared contracts, MROP protocol, and IPC plumbing for the MITOS ecosystem"
+description = "Coreutils-style userspace utilities for mitosOS, plus the shared terminal/shell IPC contract"
 license = "MIT"
 repository = "https://github.com/shark-empire/mitos-utils"
-rust-version = "1.74"
 
 [lib]
 name = "mitos_utils"
 path = "src/lib.rs"
+
 
 # NOTE: anything you drop into src/bin/ is auto-detected by Cargo as a
 # standalone binary (e.g. src/bin/ipc-ping.rs) — no extra config needed.
