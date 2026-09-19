@@ -6,6 +6,7 @@ authors = ["shark-empire"]
 description = "Shared contracts, MROP protocol, and IPC plumbing for the MITOS ecosystem"
 license = "MIT"
 repository = "https://github.com/shark-empire/mitos-utils"
+rust-version = "1.74"
 
 [lib]
 name = "mitos_utils"
