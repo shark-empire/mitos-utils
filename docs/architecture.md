@@ -259,7 +259,7 @@ docs/
   commands.md      # one-paragraph usage reference per utility
   integration.md   # the callable API surface, for other MITOS crates
 .github/workflows/
-  ci.yml           # build/clippy/test/binary-size-budget on push/PR
+  ci.yml           # fmt/clippy/build/test/audit/binary-size-budget on push/PR
 ```
 
 ## The applet shape every utility follows
