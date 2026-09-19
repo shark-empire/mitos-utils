@@ -35,6 +35,9 @@ arboard = "3.4"
 tokio = { version = "1.38", features = ["full", "test-util"] }
 
 [profile.release]
-strip = true      # drop debug symbols -- matters with ~50+ shipped binaries
-lto = true
-codegen-units = 1
+opt-level = 3
+lto = "true"          # cross-crate inlining; big for zero-dep crates like mitos-utils
+codegen-units = 1    # better optimization, slower builds (fine for release CI)
+panic = "abort"      # smaller binaries, no unwind tables
+strip = "symbols"    # massively smaller binaries on disk
+
