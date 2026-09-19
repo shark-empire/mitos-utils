@@ -36,7 +36,7 @@ tokio = { version = "1.38", features = ["full", "test-util"] }
 
 [profile.release]
 opt-level = 3
-lto = "true"          # cross-crate inlining; big for zero-dep crates like mitos-utils
+lto = "fat"          # cross-crate inlining; big for zero-dep crates like mitos-utils
 codegen-units = 1    # better optimization, slower builds (fine for release CI)
 panic = "abort"      # smaller binaries, no unwind tables
 strip = "symbols"    # massively smaller binaries on disk
