@@ -1,9 +1,22 @@
-name: CI utils-test
+name: mitos-utils CI
 
+# Deliberately Linux-only (ubuntu-latest, no OS matrix): mitos-utils is
+# "developed/tested against Linux" per docs/architecture.md, and most
+# of the privileged applets (mount, umount, dmesg, ...) are gated
+# behind cfg(target_os = "linux") anyway, so a macOS/Windows leg would
+# either no-op or just fail to link.
 on:
   push:
-    branches: [ "main" ]
+    branches: ["main"]
   pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
 
 env:
   CARGO_TERM_COLOR: always
@@ -14,46 +27,154 @@ jobs:
     name: Format (rustfmt)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-
-      - name: Install Rust
-        uses: dtolnay/rust-toolchain@stable
+      - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@stable
         with:
           components: rustfmt
+      - run: cargo fmt --all -- --check
 
-      - name: Check formatting
-        run: cargo fmt --all -- --check
+  # ────────────────────────── cargo clippy ──────────────────────────
+  # Restores the "clippy" step docs/architecture.md and README.md both
+  # describe for this pipeline but the checked-in ci.yml didn't
+  # actually have.
+  clippy:
+    name: Clippy
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy
+      - uses: Swatinem/rust-cache@v2
+      # --all-targets covers the lib, all ~50 applet binaries,
+      # mitos-box, and the tests/ integration tests.
+      - run: cargo clippy --all-targets -- -D warnings
 
   # ────────────────────────── cargo build ──────────────────────────
   build:
-    name: Build
+    name: Build (stable)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - run: cargo build --all-targets --verbose
 
-      - name: Install Rust
-        uses: dtolnay/rust-toolchain@stable
-
-      - name: Cache dependencies
-        uses: Swatinem/rust-cache@v2
-
-      # --all-targets compiles the lib, src/bin/* binaries, and tests
-      - name: Build (lib + bins + tests)
-        run: cargo build --all-targets --verbose
+  # ────────────────────────── MSRV check ──────────────────────────
+  # chown.rs / chgrp.rs call OsStr::as_encoded_bytes(), stabilized in
+  # Rust 1.74 -- Cargo.toml doesn't currently pin rust-version, so
+  # nothing enforces this. This job at least catches future drift;
+  # consider also adding `rust-version = "1.74"` under [package].
+  msrv:
+    name: MSRV (1.74.0)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@1.74.0
+      - uses: Swatinem/rust-cache@v2
+        with:
+          key: msrv
+      - run: cargo build --all-targets --verbose
 
   # ────────────────────────── cargo test ──────────────────────────
   test:
     name: Test
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      # Not --all-targets here on purpose: plain `cargo test` also runs
+      # doc-tests, on top of unit tests and the tests/*.rs integration
+      # suite (81 #[test] fns as of this writing). None of those shell
+      # out to mount/umount/kill/dmesg for real, so this needs no
+      # elevated privileges on the runner.
+      - run: cargo test --verbose
 
-      - name: Install Rust
-        uses: dtolnay/rust-toolchain@stable
+  # ────────────────────────── rustdoc ──────────────────────────
+  # docs/integration.md exists specifically so other MITOS crates can
+  # depend on this one as a library -- keep the actual rustdoc output
+  # (broken intra-doc links, etc.) held to the same bar.
+  docs:
+    name: Docs (rustdoc)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - env:
+          RUSTDOCFLAGS: "-D warnings"
+        run: cargo doc --no-deps
 
-      - name: Cache dependencies
-        uses: Swatinem/rust-cache@v2
+  # ────────────────────────── fuzz targets still compile ──────────────────────────
+  # fuzz/ is its own isolated Cargo workspace ([workspace] members =
+  # ["."] in fuzz/Cargo.toml), so none of the jobs above ever touch it
+  # -- confirmed: `cargo build`/`test` from the repo root never sees
+  # fuzz/Cargo.toml. This job doesn't actually fuzz (that's
+  # scripts/run_fuzz.sh, for local/manual runs) -- it's a cheap check
+  # that the 4 targets still compile against the real applet APIs
+  # instead of silently bit-rotting.
+  fuzz-build:
+    name: Fuzz targets compile
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@nightly
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: fuzz
+      - working-directory: fuzz
+        run: cargo check
 
-      # Runs unit tests + doc tests
-      - name: Run tests
-        run: cargo test --verbose
+  # ────────────────────────── security audit ──────────────────────────
+  # No Cargo.lock is checked in yet, so this generates one to audit
+  # against. Worth running even though the ~50 applets + common/ are
+  # zero-dependency: ipc.rs's serde/serde_json/tokio (plus arboard,
+  # dirs, notify, chrono, thiserror, which nothing in src/ currently
+  # imports -- see the note in my reply) are all still real dependency
+  # surface for a "general public" build to have vetted.
+  audit:
+    name: Security audit (cargo-audit)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - run: cargo generate-lockfile
+      - run: cargo install cargo-audit --locked
+      - run: cargo audit
+
+  # ────────────────────────── binary size budget ──────────────────────────
+  # Cargo.toml has no [profile.release] strip/lto settings yet, so
+  # these ship with full debug symbols today -- budgets below are
+  # deliberately generous so this doesn't spuriously fail on the very
+  # first real run. Once you see actual sizes in this job's log,
+  # tighten these numbers (and/or add `strip = true` under
+  # [profile.release], which alone typically shrinks a Rust binary a
+  # lot).
+  binary-size:
+    name: Binary size budget
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - run: cargo build --release --bins --verbose
+      - name: Check binary sizes
+        run: |
+          set -e
+          DEFAULT_BUDGET=$((5 * 1024 * 1024))     # 5 MiB, per single-applet binary
+          MITOS_BOX_BUDGET=$((15 * 1024 * 1024))  # 15 MiB, bundles all ~50 applets
+          fail=0
+          for bin in target/release/*; do
+            [ -f "$bin" ] && [ -x "$bin" ] || continue
+            name=$(basename "$bin")
+            size=$(stat -c%s "$bin")
+            if [ "$name" = "mitos-box" ]; then budget=$MITOS_BOX_BUDGET; else budget=$DEFAULT_BUDGET; fi
+            printf '%-14s %10d bytes (budget %d)\n' "$name" "$size" "$budget"
+            if [ "$size" -gt "$budget" ]; then
+              echo "::error::$name is $size bytes, over its $budget byte budget"
+              fail=1
+            fi
+          done
+          exit $fail
