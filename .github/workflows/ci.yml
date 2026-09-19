@@ -62,9 +62,9 @@ jobs:
 
   # ────────────────────────── MSRV check ──────────────────────────
   # chown.rs / chgrp.rs call OsStr::as_encoded_bytes(), stabilized in
-  # Rust 1.74 -- Cargo.toml doesn't currently pin rust-version, so
-  # nothing enforces this. This job at least catches future drift;
-  # consider also adding `rust-version = "1.74"` under [package].
+  # Rust 1.74 -- Cargo.toml pins rust-version = "1.74" for exactly
+  # this reason. This job keeps that pin honest against a real
+  # toolchain instead of just trusting the manifest.
   msrv:
     name: MSRV (1.74.0)
     runs-on: ubuntu-latest
@@ -128,11 +128,9 @@ jobs:
 
   # ────────────────────────── security audit ──────────────────────────
   # No Cargo.lock is checked in yet, so this generates one to audit
-  # against. Worth running even though the ~50 applets + common/ are
-  # zero-dependency: ipc.rs's serde/serde_json/tokio (plus arboard,
-  # dirs, notify, chrono, thiserror, which nothing in src/ currently
-  # imports -- see the note in my reply) are all still real dependency
-  # surface for a "general public" build to have vetted.
+  # against. The dependency surface is small on purpose -- just
+  # ipc.rs's serde/serde_json/tokio -- but "small" isn't "zero", and a
+  # "general public" build should still have it vetted.
   audit:
     name: Security audit (cargo-audit)
     runs-on: ubuntu-latest
@@ -145,13 +143,10 @@ jobs:
       - run: cargo audit
 
   # ────────────────────────── binary size budget ──────────────────────────
-  # Cargo.toml has no [profile.release] strip/lto settings yet, so
-  # these ship with full debug symbols today -- budgets below are
-  # deliberately generous so this doesn't spuriously fail on the very
-  # first real run. Once you see actual sizes in this job's log,
-  # tighten these numbers (and/or add `strip = true` under
-  # [profile.release], which alone typically shrinks a Rust binary a
-  # lot).
+  # Cargo.toml now sets strip/lto/codegen-units=1 under
+  # [profile.release], so these should land well under the numbers
+  # below -- still kept generous since this hasn't had a real run
+  # yet. Once you see actual sizes in this job's log, tighten them.
   binary-size:
     name: Binary size budget
     runs-on: ubuntu-latest
@@ -163,8 +158,8 @@ jobs:
       - name: Check binary sizes
         run: |
           set -e
-          DEFAULT_BUDGET=$((5 * 1024 * 1024))     # 5 MiB, per single-applet binary
-          MITOS_BOX_BUDGET=$((15 * 1024 * 1024))  # 15 MiB, bundles all ~50 applets
+          DEFAULT_BUDGET=$((2 * 1024 * 1024))    # 2 MiB, per single-applet binary
+          MITOS_BOX_BUDGET=$((8 * 1024 * 1024))  # 8 MiB, bundles all ~50 applets
           fail=0
           for bin in target/release/*; do
             [ -f "$bin" ] && [ -x "$bin" ] || continue
