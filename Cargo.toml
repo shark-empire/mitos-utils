@@ -32,3 +32,8 @@ arboard = "3.4"
 [dev-dependencies]
 # Full runtime + test utilities for integration tests of the IPC framing
 tokio = { version = "1.38", features = ["full", "test-util"] }
+
+[profile.release]
+strip = true      # drop debug symbols -- matters with ~50+ shipped binaries
+lto = true
+codegen-units = 1
