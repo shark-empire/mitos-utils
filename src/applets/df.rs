@@ -50,8 +50,10 @@ pub fn run(args: Vec<String>) -> AppResult<()> {
         args
     };
 
-println!("{:<20} {:>10} {:>10} {:>10}  Mounted on", "Filesystem", "Size", "Used", "Avail");
-
+    println!(
+        "{:<20} {:>10} {:>10} {:>10}  Mounted on",
+        "Filesystem", "Size", "Used", "Avail"
+    );
 
     let mut had_error = false;
     for target in &targets {
