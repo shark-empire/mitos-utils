@@ -109,7 +109,7 @@ fn list_dir(
             size_b.cmp(&size_a)
         });
     } else {
-        entries.sort_by(|a, b| a.file_name().cmp(&b.file_name()));
+        entries.sort_by_key(|a| a.file_name());
     }
 
     // Handle -r (Reverse sort)
