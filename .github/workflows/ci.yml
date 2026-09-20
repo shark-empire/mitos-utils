@@ -1,4 +1,4 @@
-name: mitos-utils CI
+name: mitos-utils-CI
 
 # Deliberately Linux-only (ubuntu-latest, no OS matrix): mitos-utils is
 # "developed/tested against Linux" per docs/architecture.md, and most
