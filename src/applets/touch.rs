@@ -36,6 +36,7 @@ fn touch_one(path: &str) -> std::io::Result<()> {
     } else {
         OpenOptions::new()
             .create(true)
+            .truncate(false) // Add this line
             .write(true)
             .open(path)
             .map(|_| ())
