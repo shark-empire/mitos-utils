@@ -70,7 +70,7 @@ pub fn run(args: Vec<String>) -> AppResult<()> {
             }
         };
 
-        for (i, line) in reader.lines().flatten().enumerate() {
+        for (i, line) in reader.lines().map_while(Result::ok).enumerate() {
             let is_match = if fixed_string {
                 if ignore_case {
                     line.to_lowercase().contains(&pattern.to_lowercase())
