@@ -2,7 +2,7 @@
 name = "mitos-utils"
 version = "0.1.0"
 edition = "2021"
-rust-version = "1.74"
+rust-version = "1.85"
 authors = ["shark-empire"]
 description = "Coreutils-style userspace utilities for mitosOS, plus the shared terminal/shell IPC contract"
 license = "MIT"
