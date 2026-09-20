@@ -204,14 +204,12 @@ impl SafeDir {
         let scoped = self.scoped_path(name);
         let pre = std::fs::symlink_metadata(&scoped)?;
         if pre.file_type().is_symlink() {
-            return Err(io::Error::new(
-                io::ErrorKind::Other,
+            return Err(io::Error::other(
                 format!("refusing to recurse through symlink '{}'", name),
             ));
         }
         if !pre.is_dir() {
-            return Err(io::Error::new(
-                io::ErrorKind::Other,
+            return Err(io::Error::other(
                 format!("'{}' is not a directory", name),
             ));
         }
