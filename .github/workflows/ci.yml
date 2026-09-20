@@ -129,7 +129,7 @@ jobs:
   # ────────────────────────── security audit ──────────────────────────
   # No Cargo.lock is checked in yet, so this generates one to audit
   # against. The dependency surface is small on purpose -- just
-  # ipc.rs's serde/serde_json/tokio -- but "small" isn't "zero", and a
+  # ipc.rs's serde/serde_json/bincode/tokio -- but "small" isn't "zero", and a
   # "general public" build should still have it vetted.
   audit:
     name: Security audit (cargo-audit)
