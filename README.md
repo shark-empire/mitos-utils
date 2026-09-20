@@ -34,8 +34,11 @@ A living checklist -- update it as items get crossed off for real
       `common` (`fuzz/` is one deliberate, isolated exception).
       `src/ipc.rs` (terminal/shell IPC, not one of the 50 utilities)
       is the other -- it's what the other MITOS components use to
-      talk to this crate, and it needs `serde`/`serde_json`/`tokio`
-      for that.
+      talk to this crate, and it needs `serde`, `tokio`, plus two
+      encodings for its two transports: `serde_json` for MROP (must
+      stay text-safe inside a terminal escape sequence) and `bincode`
+      for the raw-socket IPC framing (no text-safety need, so it gets
+      the smaller/faster binary format instead).
 - [x] `--help` / `--version` on every command
 - [x] POSIX `--` end-of-options on every command that takes file/path
       arguments
