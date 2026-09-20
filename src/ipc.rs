@@ -2,9 +2,16 @@
 //! Every crate (terminal, shell, file-manager, system-monitor, settings)
 //! depends on this file so messages always stay in sync.
 //!
-//! Two transports live here:
-//!  * MROP — MITOS Rich Output Protocol (shell ➜ terminal, over stdout/PTY)
-//!  * IPC  — length-prefixed JSON over Unix Domain Sockets (daemon ⇄ terminal)
+//! Two transports live here, deliberately encoded differently:
+//!  * MROP — MITOS Rich Output Protocol (shell ➜ terminal, over stdout/PTY).
+//!    Stays JSON-in-text: the payload is embedded inside a terminal OSC
+//!    escape sequence, so it has to remain printable/text-safe -- raw
+//!    binary here could contain a stray control byte (e.g. 0x07) that
+//!    terminates the escape sequence early.
+//!  * IPC  — length-prefixed bincode over Unix Domain Sockets (daemon ⇄
+//!    terminal). A raw socket has no text-safety requirement, so this
+//!    one uses the smaller, faster binary encoding instead (matches
+//!    mitos-service's wire format, for the same reason it chose bincode).
 
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
 use std::io::Write;
@@ -33,6 +40,9 @@ pub enum RichWidget {
 
 impl RichWidget {
     /// Serialize the widget into a full MROP escape sequence.
+    ///
+    /// Deliberately JSON, not bincode: this string gets embedded inside a
+    /// terminal OSC escape sequence, so it must stay text-safe.
     pub fn to_osc(&self) -> String {
         format!(
             "\x1b]{};{}\x07",
@@ -143,15 +153,15 @@ pub fn list_terminal_sockets() -> Vec<(u32, String)> {
 }
 
 // ------------------------------------------------------------------
-// Framing: [u32 LE length][JSON payload]
+// Framing: [u32 LE length][bincode payload]
 // Prevents TCP/Unix socket stream fragmentation issues.
 // ------------------------------------------------------------------
 
 pub async fn ipc_send<T: Serialize>(stream: &mut UnixStream, msg: &T) -> std::io::Result<()> {
-    let json = serde_json::to_vec(msg)
+    let payload = bincode::serialize(msg)
         .map_err(|e| std::io::Error::new(std::io::ErrorKind::InvalidData, e))?;
-    stream.write_all(&(json.len() as u32).to_le_bytes()).await?;
-    stream.write_all(&json).await?;
+    stream.write_all(&(payload.len() as u32).to_le_bytes()).await?;
+    stream.write_all(&payload).await?;
     Ok(())
 }
 
@@ -171,7 +181,7 @@ pub async fn ipc_recv<T: DeserializeOwned>(stream: &mut UnixStream) -> std::io::
     }
     let mut buf = vec![0u8; len];
     stream.read_exact(&mut buf).await?;
-    serde_json::from_slice(&buf)
+    bincode::deserialize(&buf)
         .map(Some)
         .map_err(|e| std::io::Error::new(std::io::ErrorKind::InvalidData, e))
 }
