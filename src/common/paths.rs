@@ -103,9 +103,10 @@ pub fn expand_tilde(path: &str) -> PathBuf {
             let home_path = PathBuf::from(home);
             if path.len() == 1 {
                 return home_path;
-            } else if path.starts_with("~/") {
-                return home_path.join(&path[2..]);
-            }
+            } else if let Some(stripped) = path.strip_prefix("~/") {
+    return home_path.join(stripped);
+          }
+
         }
     }
     PathBuf::from(path)
