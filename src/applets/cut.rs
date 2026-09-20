@@ -48,7 +48,7 @@ pub fn run(args: Vec<String>) -> AppResult<()> {
                 std::fs::File::open(path).map_err(|e| AppError::new(format!("{}: {}", path, e)))?,
             ))
         };
-        for line in reader.lines().flatten() {
+        for line in reader.lines().map_while(Result::ok) {
             let parts: Vec<&str> = line.split(delimiter).collect();
             // Write selected fields straight to the buffered output
             // instead of collecting them into a `Vec<&str>` and
