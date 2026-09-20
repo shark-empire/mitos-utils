@@ -82,8 +82,7 @@ fn remove_one(path: &Path, recursive: bool) -> std::io::Result<()> {
     let meta = fs::symlink_metadata(path)?;
     if meta.is_dir() && !meta.is_symlink() {
         if !recursive {
-            return Err(std::io::Error::new(
-                std::io::ErrorKind::Other,
+            return Err(io::Error::other(
                 "is a directory (use -r to remove directories)",
             ));
         }
@@ -98,8 +97,7 @@ fn remove_one(path: &Path, recursive: bool) -> std::io::Result<()> {
     let meta = fs::symlink_metadata(path)?;
     if meta.is_dir() && !meta.is_symlink() {
         if !recursive {
-            return Err(std::io::Error::new(
-                std::io::ErrorKind::Other,
+            return Err(io::Error::other(
                 "is a directory (use -r to remove directories)",
             ));
         }
