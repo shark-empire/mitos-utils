@@ -131,7 +131,7 @@ pub fn columnate(names: &[String], term_width: usize, out: &mut impl Write) {
     }
     let col_width = names.iter().map(|n| n.chars().count()).max().unwrap_or(0) + 2;
     let cols = std::cmp::max(1, term_width / col_width.max(1));
-    let rows = names.len().div_ceil(cols)
+    let rows = names.len().div_ceil(cols);
 
     let mut line = String::with_capacity(term_width.max(col_width));
     for row in 0..rows {
