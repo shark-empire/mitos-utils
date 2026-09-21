@@ -1,13 +1,13 @@
 # mitos-utils
 
 Core system utilities for [MITOS](../../mitosos) -- a coreutils-style
-suite of ~50 small userspace programs (`cat`, `ls`, `grep`, `chmod`,
+suite of ~54 small userspace programs (`cat`, `ls`, `grep`, `chmod`,
 `ps`, ...), each one both a standalone binary *and* a plain callable
 Rust function, sharing a small common library for error handling,
 path logic, permission formatting, user/group lookups, and
 TOCTOU-safe recursive directory operations. Also buildable as a
 single multiplexed binary (`mitos-box`, busybox/toybox-style) instead
-of ~50 separate binaries.
+of ~54 separate binaries.
 
 ## Status
 
@@ -28,9 +28,9 @@ A living checklist -- update it as items get crossed off for real
 
 ### Done
 
-- [x] All 50 utilities + `common` library (errors, output, paths,
+- [x] All 54 utilities + `common` library (errors, output, paths,
       permissions, users)
-- [x] Zero dependencies for the ~50 coreutils-style applets and
+- [x] Zero dependencies for the ~54 coreutils-style applets and
       `common` (`fuzz/` is one deliberate, isolated exception).
       `src/ipc.rs` (terminal/shell IPC, not one of the 50 utilities)
       is the other -- it's what the other MITOS components use to
@@ -54,7 +54,7 @@ A living checklist -- update it as items get crossed off for real
       (`.github/workflows/ci.yml`) -- **written, not yet run**
 - [x] Fuzz test scaffolding: 4 targets (`printf`, `tr`, `cut`'s field
       parser, `chmod`'s mode parser) -- **written, not yet run**
-- [x] Real `man` pages: all 50 utilities + `mitos-box(1)` + 3
+- [x] Real `man` pages: all 54 utilities + `mitos-box(1)` + 3
       overview pages (`man/man1/`, `man/man7/`)
 - [x] Integration API reference for other MITOS crates
       (`docs/integration.md`)
@@ -136,6 +136,7 @@ A living checklist -- update it as items get crossed off for real
 - [x] Fuzz targets actually run (See `scripts/run_fuzz.sh` which installs `cargo-fuzz` and runs all 4 targets).
 - [x] Windows support -- Skipped per README rationale: mitosOS is a POSIX-style kernel, and most utilities (`chmod`, `mount`) are inherently Unix concepts. Text tools compile as-is on Windows.
 - [ ] Locale-aware collation -- Deferred. Requires a full Unicode Collation Algorithm (UCA) database which conflicts with the zero-dependency stance.
+- [x] `date`, `find`, `which`, `false` added -- the clearest gaps against MITOS Utils's spec categories that were safe to fill without a design discussion first (date/time and a chunk of filesystem/environment-inspection had nothing; `false` was just missing next to `true`). `date` is UTC-only (no `$TZ`, no `-s/--set`); `find` covers `-name`/`-type`/`-maxdepth`/`-mindepth` only (no `-exec`, `-size`, `-mtime`, character classes). Both are documented gaps here and in their man pages, not silent ones.
 
 ## Layout
 

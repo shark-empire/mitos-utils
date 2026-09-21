@@ -2,7 +2,7 @@
 name = "mitos-utils"
 version = "0.1.0"
 edition = "2021"
-rust-version = "1.85"
+rust-version = "1.74"
 authors = ["shark-empire"]
 description = "Coreutils-style userspace utilities for mitosOS, plus the shared terminal/shell IPC contract"
 license = "MIT"
@@ -12,32 +12,29 @@ repository = "https://github.com/shark-empire/mitos-utils"
 name = "mitos_utils"
 path = "src/lib.rs"
 
-
 # NOTE: anything you drop into src/bin/ is auto-detected by Cargo as a
 # standalone binary (e.g. src/bin/ipc-ping.rs) — no extra config needed.
 
+# The ~50 applets and common/ are zero-dependency by design (see
+# docs/architecture.md). Everything below exists solely for src/ipc.rs
+# (terminal/shell IPC -- not one of the 50 utilities), which
+# deliberately uses two encodings for its two transports: serde_json
+# for MROP (embedded in a terminal escape sequence, must stay
+# text-safe) and bincode for the raw-socket IPC framing (no text-safety
+# need, so it gets the smaller/faster binary encoding instead -- matches
+# mitos-service's wire format). The fuzz/ workspace is the only other
+# zero-dependency exception, and it's isolated from this package
+# entirely (see fuzz/Cargo.toml).
 [dependencies]
-# Serialization for IpcRequest / IpcResponse / RichWidget
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 bincode = "1.3"
-# Async Unix Domain Socket framing (ipc_send / ipc_recv over UnixStream)
 tokio = { version = "1.38", features = ["net", "io-util"] }
-arboard = "3.4"         
-# ── Optional: uncomment as src/common or src/applets grow ──────────────
- dirs = "5.0"          # XDG home/config discovery
- notify = "6.1"        # filesystem watching (theme/config hot-reload)
- chrono = "0.4"        # timestamps for logs & execution blocks
- thiserror = "1.0"     # ergonomic shared error types
 
 [dev-dependencies]
-# Full runtime + test utilities for integration tests of the IPC framing
 tokio = { version = "1.38", features = ["full", "test-util"] }
 
 [profile.release]
-opt-level = 3
-lto = "fat"          # cross-crate inlining; big for zero-dep crates like mitos-utils
-codegen-units = 1    # better optimization, slower builds (fine for release CI)
-panic = "abort"      # smaller binaries, no unwind tables
-strip = "symbols"    # massively smaller binaries on disk
-
+strip = true      # drop debug symbols -- matters with ~50+ shipped binaries
+lto = true
+codegen-units = 1
