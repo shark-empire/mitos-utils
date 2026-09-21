@@ -27,6 +27,8 @@ also reachable through the single multiplexed binary,
 - `realpath PATH...` -- resolve to an absolute, symlink-free path.
 - `readlink [-f] PATH...` -- print a symlink's target, or its fully resolved path with `-f`.
 - `stat PATH...` -- print detailed file status.
+- `find [PATH...] [-name PATTERN] [-type f|d|l] [-maxdepth N] [-mindepth N]` -- walk a directory tree.
+- `which COMMAND...` -- print the full path of each command found on `$PATH`.
 
 ## Text processing
 
@@ -48,6 +50,7 @@ also reachable through the single multiplexed binary,
 - `ps` -- list running processes (Linux).
 - `kill [-SIGNAL] PID...` -- send a signal to a process.
 - `sleep DURATION` -- pause (accepts `s`/`m`/`h` suffixes).
+- `date [+FORMAT]` -- print the current date and time (UTC).
 - `uptime` -- print system uptime (Linux).
 - `free` -- print memory usage (Linux).
 - `uname [-a|-s|-n|-r|-m]` -- print system information.
@@ -77,6 +80,7 @@ also reachable through the single multiplexed binary,
 
 - `clear` -- clear the terminal screen.
 - `true` -- exit successfully, doing nothing.
+- `false` -- exit unsuccessfully, doing nothing.
 
 ## Multiplexed binary
 
