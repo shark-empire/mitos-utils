@@ -1,0 +1,55 @@
+.TH DATE 1 "September 2026" "mitos-utils 0.1.0" "MITOS User Commands"
+.SH NAME
+date \- print the current date and time
+.SH SYNOPSIS
+.B date
+.RI [+ format ]
+.SH DESCRIPTION
+Print the current date and time in UTC. With no argument, prints a fixed default format (e.g.
+.IR "Sun Sep 20 14:05:09 UTC 2026" ).
+With a
+.RI + format
+argument, renders that format instead, using
+.BR strftime (3)-style
+conversion specifiers:
+.TP
+.B %Y
+4-digit year
+.TP
+.B %m
+2-digit month (01-12)
+.TP
+.B %d
+2-digit day of month (01-31)
+.TP
+.B %H %M %S
+2-digit hour, minute, second
+.TP
+.B %j
+3-digit day of year (001-366)
+.TP
+.B %A %a
+full / abbreviated weekday name
+.TP
+.B %B %b
+full / abbreviated month name
+.TP
+.B %s
+seconds since the Unix epoch
+.TP
+.B %n %t %%
+newline, tab, a literal percent sign
+.SH NOTES
+UTC only: there is no
+.B $TZ
+or local-timezone support yet. Read-only: there is no
+.BR "\-s/\-\-set"
+to change the system clock yet. Both are documented gaps, not silent bugs -- see mitos\-utils\-compat(7).
+.SH GLOBAL OPTIONS
+Every mitos-utils command additionally accepts \fB\-\-help\fR (print a usage line and exit) and \fB\-\-version\fR.
+.SH EXIT STATUS
+0 on success, 2 on a usage error.
+.SH SEE ALSO
+.BR mitos\-box (1),
+.BR mitos\-utils\-compat (7),
+.BR mitos\-utils\-integration (7)

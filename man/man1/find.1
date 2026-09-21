@@ -1,0 +1,48 @@
+.TH FIND 1 "September 2026" "mitos-utils 0.1.0" "MITOS User Commands"
+.SH NAME
+find \- walk a directory tree and print matching paths
+.SH SYNOPSIS
+.B find
+.RI [ path ...]
+.RI [\-name " pattern" ]
+.RI [\-type " f|d|l" ]
+.RI [\-maxdepth " n" ]
+.RI [\-mindepth " n" ]
+.SH DESCRIPTION
+Recursively walk each
+.I path
+(default
+.BR . )
+and print every entry that matches all given filters. With no filters, prints every entry under
+.IR path .
+.TP
+.BI \-name " pattern"
+Match the entry's base name against a shell glob:
+.B *
+matches any run of characters (including none),
+.B ?
+matches exactly one. No character classes (e.g.
+.BR [abc] ).
+.TP
+.BI \-type " f|d|l"
+Only regular files, directories, or symlinks respectively.
+.TP
+.BI \-maxdepth " n" ", " \-mindepth " n"
+Limit how far below each starting
+.I path
+an entry may be;
+.I path
+itself is depth 0.
+.SH NOTES
+.BR \-exec ", " \-size ", " \-mtime / \-newer ,
+and
+.B [abc]
+character classes are not implemented -- documented gaps, not silent ones; see mitos\-utils\-compat(7). Traversal skips symlinked directories rather than following them, so a symlink cycle can't cause an infinite walk.
+.SH GLOBAL OPTIONS
+Every mitos-utils command additionally accepts \fB\-\-help\fR (print a usage line and exit) and \fB\-\-version\fR, and \fB\-\-\fR to mark the end of options.
+.SH EXIT STATUS
+0 on success, 1 if any path couldn't be read, 2 on a usage error.
+.SH SEE ALSO
+.BR mitos\-box (1),
+.BR mitos\-utils\-compat (7),
+.BR mitos\-utils\-integration (7)
