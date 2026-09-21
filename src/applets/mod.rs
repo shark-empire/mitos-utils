@@ -1,6 +1,6 @@
 //! Every mitos-utils applet as a callable library function, plus a
 //! name -> (usage, function) dispatch table used by `mitos-box`
-//! (`src/bin/mitos-box.rs`) to act as all ~50 of them from one
+//! (`src/bin/mitos-box.rs`) to act as all ~54 of them from one
 //! binary, busybox/toybox-style. Each `src/bin/<name>.rs` is a thin
 //! wrapper that also calls straight into the matching module here --
 //! see docs/architecture.md for why the crate is split this way.
@@ -17,6 +17,7 @@ pub mod chown;
 pub mod clear;
 pub mod cp;
 pub mod cut;
+pub mod date;
 pub mod df;
 pub mod diff;
 pub mod dirname;
@@ -24,6 +25,11 @@ pub mod dmesg;
 pub mod du;
 pub mod echo;
 pub mod env;
+/// `false` is a reserved keyword too (see `true_`'s note further
+/// down), so this module is `false_` -- the registered applet name
+/// is plain `"false"`.
+pub mod false_;
+pub mod find;
 pub mod free;
 pub mod grep;
 pub mod groups;
@@ -61,6 +67,7 @@ pub mod uname;
 pub mod uniq;
 pub mod uptime;
 pub mod wc;
+pub mod which;
 pub mod whoami;
 
 use crate::common::errors::AppResult;
@@ -70,7 +77,7 @@ pub type AppletFn = fn(Vec<String>) -> AppResult<()>;
 
 /// `(name, usage, run)` for every applet, in the same order as
 /// `docs/commands.md`. `mitos-box` looks names up here; nothing else
-/// in the crate needs to enumerate all 50 by hand.
+/// in the crate needs to enumerate all 54 by hand.
 pub const APPLETS: &[(&str, &str, AppletFn)] = &[
     ("cat", cat::USAGE, cat::run),
     ("ls", ls::USAGE, ls::run),
@@ -122,4 +129,8 @@ pub const APPLETS: &[(&str, &str, AppletFn)] = &[
     ("chgrp", chgrp::USAGE, chgrp::run),
     ("clear", clear::USAGE, clear::run),
     ("true", true_::USAGE, true_::run),
+    ("false", false_::USAGE, false_::run),
+    ("date", date::USAGE, date::run),
+    ("find", find::USAGE, find::run),
+    ("which", which::USAGE, which::run),
 ];
