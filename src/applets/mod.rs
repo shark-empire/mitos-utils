@@ -1,6 +1,6 @@
 //! Every mitos-utils applet as a callable library function, plus a
 //! name -> (usage, function) dispatch table used by `mitos-box`
-//! (`src/bin/mitos-box.rs`) to act as all ~54 of them from one
+//! (`src/bin/mitos-box.rs`) to act as all ~57 of them from one
 //! binary, busybox/toybox-style. Each `src/bin/<name>.rs` is a thin
 //! wrapper that also calls straight into the matching module here --
 //! see docs/architecture.md for why the crate is split this way.
@@ -50,9 +50,12 @@ pub mod readlink;
 pub mod realpath;
 pub mod rm;
 pub mod rmdir;
+pub mod service;
 pub mod sleep;
 pub mod sort;
 pub mod stat;
+pub mod su;
+pub mod sudo;
 pub mod sync;
 pub mod tail;
 pub mod tee;
@@ -77,7 +80,7 @@ pub type AppletFn = fn(Vec<String>) -> AppResult<()>;
 
 /// `(name, usage, run)` for every applet, in the same order as
 /// `docs/commands.md`. `mitos-box` looks names up here; nothing else
-/// in the crate needs to enumerate all 54 by hand.
+/// in the crate needs to enumerate all 57 by hand.
 pub const APPLETS: &[(&str, &str, AppletFn)] = &[
     ("cat", cat::USAGE, cat::run),
     ("ls", ls::USAGE, ls::run),
@@ -133,4 +136,7 @@ pub const APPLETS: &[(&str, &str, AppletFn)] = &[
     ("date", date::USAGE, date::run),
     ("find", find::USAGE, find::run),
     ("which", which::USAGE, which::run),
+    ("su", su::USAGE, su::run),
+    ("sudo", sudo::USAGE, sudo::run),
+    ("service", service::USAGE, service::run),
 ];
