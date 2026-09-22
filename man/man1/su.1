@@ -1,0 +1,44 @@
+.TH SU 1 "September 2026" "mitos-utils 0.1.0" "MITOS User Commands"
+.SH NAME
+su \- switch to another user's identity
+.SH SYNOPSIS
+.B su
+.RI [ user ]
+.RB [ \-c
+.IR command ]
+.SH DESCRIPTION
+Switch to
+.IR user 's
+identity (default
+.BR root ),
+after verifying
+.IR user 's
+password, then run their login shell with a clean environment. If
+.BR \-c
+.I command
+is given, runs
+.I command
+through that shell instead of starting it interactively. Already
+being root skips the password prompt, same as every other
+.BR su .
+.SH SECURITY
+.B This has not been independently security-reviewed.
+It only functions at all when installed setuid\-root
+(owned by root,
+.BR "chmod u+s" );
+until then it cannot read
+.B /etc/shadow
+and every attempt fails, which is the safe default. Read
+.B common::auth
+in the source before installing this setuid anywhere that matters --
+privilege\-management bugs are categorically more serious than a bug in
+any other command in this suite. Get it reviewed and test it
+exhaustively in a disposable VM first.
+.SH GLOBAL OPTIONS
+Every mitos-utils command additionally accepts \fB\-\-help\fR and \fB\-\-version\fR, and \fB\-\-\fR to mark the end of options.
+.SH EXIT STATUS
+0 on success. Non-zero on a failed login, missing user, or usage error -- `su` otherwise never returns at all, since a successful run execs the target shell in place of this process.
+.SH SEE ALSO
+.BR sudo (1),
+.BR mitos\-box (1),
+.BR mitos\-utils\-compat (7)

@@ -1,0 +1,53 @@
+.TH SERVICE 1 "September 2026" "mitos-utils 0.1.0" "MITOS User Commands"
+.SH NAME
+service \- talk to the mitos-services control socket
+.SH SYNOPSIS
+.B service
+.I subcommand
+.RI [ args ...]
+.SH DESCRIPTION
+A thin client for mitos\-services'
+.B /run/mitos\-services/control.sock
+-- connects, sends one line, prints whatever it reads back until the
+connection closes. Mirrors that daemon's actual protocol rather than a
+guessed start/stop/restart\-per\-unit interface it doesn't expose:
+.TP
+.B status
+Request a fresh status summary.
+.TP
+.B reload
+Ask the supervisor to reload its config.
+.TP
+.B ping
+Liveness check; prints
+.B PONG
+if the daemon is up.
+.TP
+.B targets
+List configured targets and which one is active.
+.TP
+.BI isolate " target"
+Switch to a different target.
+.TP
+.BI launch " path " "[args...]"
+Launch an on\-demand sandboxed app.
+.TP
+.B apps
+List currently launched on\-demand apps.
+.TP
+.RI [ logs " [" filter "]]"
+Print recently buffered log lines, optionally filtered.
+.SH NOTES
+There is no per\-unit
+.BR start / stop / restart :
+the daemon itself doesn't have one yet, only whole\-supervisor
+.B reload
+and whole\-target
+.BR isolate .
+.SH GLOBAL OPTIONS
+Every mitos-utils command additionally accepts \fB\-\-help\fR and \fB\-\-version\fR, and \fB\-\-\fR to mark the end of options.
+.SH EXIT STATUS
+0 on success, 1 if the socket couldn't be reached, 2 on a usage error.
+.SH SEE ALSO
+.BR mitos\-box (1),
+.BR mitos\-utils\-compat (7)
