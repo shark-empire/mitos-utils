@@ -1,0 +1,19 @@
+# Example /etc/mitos-sudoers for mitos-utils' `sudo`.
+#
+# One username per line. A user listed here can run `sudo` after
+# entering *their own* password (not root's). Blank lines and lines
+# starting with # are ignored.
+#
+# This is deliberately much simpler than a real /etc/sudoers: no
+# per-command rules, no host qualifiers, no NOPASSWD, no groups
+# (%wheel-style) -- see sudo(1) and src/common/auth.rs's doc comment
+# for why smaller is deliberate here.
+#
+# This file MUST be owned by root and NOT writable by anyone else
+# (e.g. `chown root:root /etc/mitos-sudoers && chmod 644
+# /etc/mitos-sudoers`) or `sudo` will refuse to trust it at all --
+# a world/group-writable sudoers file would let any user add
+# themselves to it.
+
+# alice
+# bob
