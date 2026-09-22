@@ -1,13 +1,13 @@
 # mitos-utils
 
 Core system utilities for [MITOS](../../mitosos) -- a coreutils-style
-suite of ~54 small userspace programs (`cat`, `ls`, `grep`, `chmod`,
+suite of ~57 small userspace programs (`cat`, `ls`, `grep`, `chmod`,
 `ps`, ...), each one both a standalone binary *and* a plain callable
 Rust function, sharing a small common library for error handling,
 path logic, permission formatting, user/group lookups, and
 TOCTOU-safe recursive directory operations. Also buildable as a
 single multiplexed binary (`mitos-box`, busybox/toybox-style) instead
-of ~54 separate binaries.
+of ~57 separate binaries.
 
 ## Status
 
@@ -21,6 +21,23 @@ itself, which doesn't have a userspace to host this crate on yet.
 actually compiles it. See `docs/architecture.md` for what that means
 and what's next.
 
+## ⚠️ `su` / `sudo` need real review before you install them setuid
+
+Everything else in this crate being uncompiled-so-far is a normal,
+bounded kind of risk. `su` and `sudo` are a different kind: they only
+do anything at all once installed setuid-root, and a mistake in
+privilege-management code means any local user becoming root, not
+just a wrong answer from a utility. Both are written with real care
+(see `src/common/auth.rs`'s own doc comment for exactly what and why)
+but **have not been audited or run on a real system**, which matters
+categorically more here than everywhere else in this README's status
+notes. Before installing either setuid anywhere with real users or
+secrets: get `common/auth.rs`, `applets/su.rs`, and `applets/sudo.rs`
+reviewed by someone who's read real CVEs against `su`/`sudo`/`login`,
+and test exhaustively in a disposable VM first -- wrong passwords,
+locked accounts, a missing/malformed `/etc/shadow` or
+`/etc/mitos-sudoers`, no controlling terminal, `Ctrl-C` mid-prompt.
+
 ## What's done vs. what's left
 
 A living checklist -- update it as items get crossed off for real
@@ -28,9 +45,9 @@ A living checklist -- update it as items get crossed off for real
 
 ### Done
 
-- [x] All 54 utilities + `common` library (errors, output, paths,
+- [x] All 57 utilities + `common` library (errors, output, paths,
       permissions, users)
-- [x] Zero dependencies for the ~54 coreutils-style applets and
+- [x] Zero dependencies for the ~57 coreutils-style applets and
       `common` (`fuzz/` is one deliberate, isolated exception).
       `src/ipc.rs` (terminal/shell IPC, not one of the 50 utilities)
       is the other -- it's what the other MITOS components use to
@@ -54,7 +71,7 @@ A living checklist -- update it as items get crossed off for real
       (`.github/workflows/ci.yml`) -- **written, not yet run**
 - [x] Fuzz test scaffolding: 4 targets (`printf`, `tr`, `cut`'s field
       parser, `chmod`'s mode parser) -- **written, not yet run**
-- [x] Real `man` pages: all 54 utilities + `mitos-box(1)` + 3
+- [x] Real `man` pages: all 57 utilities + `mitos-box(1)` + 3
       overview pages (`man/man1/`, `man/man7/`)
 - [x] Integration API reference for other MITOS crates
       (`docs/integration.md`)
@@ -137,6 +154,8 @@ A living checklist -- update it as items get crossed off for real
 - [x] Windows support -- Skipped per README rationale: mitosOS is a POSIX-style kernel, and most utilities (`chmod`, `mount`) are inherently Unix concepts. Text tools compile as-is on Windows.
 - [ ] Locale-aware collation -- Deferred. Requires a full Unicode Collation Algorithm (UCA) database which conflicts with the zero-dependency stance.
 - [x] `date`, `find`, `which`, `false` added -- the clearest gaps against MITOS Utils's spec categories that were safe to fill without a design discussion first (date/time and a chunk of filesystem/environment-inspection had nothing; `false` was just missing next to `true`). `date` is UTC-only (no `$TZ`, no `-s/--set`); `find` covers `-name`/`-type`/`-maxdepth`/`-mindepth` only (no `-exec`, `-size`, `-mtime`, character classes). Both are documented gaps here and in their man pages, not silent ones.
+- [x] `su`, `sudo` added -- see the security section above before installing either setuid anywhere real. `sudo` uses `/etc/mitos-sudoers` (one username per line; see `etc/mitos-sudoers.example`), refuses to trust it unless it's root-owned and not group/other-writable, and is deliberately smaller than real sudo (no per-command rules, `NOPASSWD`, timestamp caching, or `-u`).
+- [x] `service` added -- a thin client for mitos-services' real control-socket protocol (status/reload/ping/targets/isolate/launch/apps/logs). No per-unit start/stop/restart because that daemon doesn't have one yet to wrap.
 
 ## Layout
 
