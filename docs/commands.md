@@ -76,6 +76,19 @@ also reachable through the single multiplexed binary,
 - `chown [-R] OWNER[:GROUP] FILE...` -- change file owner/group.
 - `chgrp [-R] GROUP FILE...` -- change file group.
 
+## Privilege escalation
+
+**`su`/`sudo` have not been independently security-reviewed -- see
+README.md's security section before installing either setuid
+anywhere real.**
+
+- `su [USER] [-c COMMAND]` -- switch to USER's identity (default root), given their password.
+- `sudo COMMAND [ARGS...]` -- run COMMAND as root, given the caller's own password and `/etc/mitos-sudoers` membership.
+
+## Service control
+
+- `service {status|reload|ping|targets|apps|isolate TARGET|launch PATH [ARGS...]|logs [FILTER]}` -- talk to mitos-services' control socket.
+
 ## Misc
 
 - `clear` -- clear the terminal screen.

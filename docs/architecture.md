@@ -2,7 +2,7 @@
 
 ## What this crate is
 
-`mitos-utils` is a coreutils-style suite of ~54 small userspace
+`mitos-utils` is a coreutils-style suite of ~57 small userspace
 utilities for MITOS. Each one's logic lives in
 `src/applets/<name>.rs` as a plain callable function; `src/bin/`
 holds both a thin per-utility wrapper binary for each one *and*
@@ -99,7 +99,7 @@ applet, by looking at how it was invoked:
   (`mitos-box ls -la`) -- useful without setting up symlinks.
 
 The point: a real mitosOS install can ship one `mitos-box` binary
-plus ~54 symlinks pointing at it, instead of ~54 separate copies of
+plus ~57 symlinks pointing at it, instead of ~57 separate copies of
 the same statically-linked `std` runtime -- the same footprint
 argument busybox and toybox make for embedded Linux applies just as
 much to a from-scratch OS's initial disk image. `applets::APPLETS`
@@ -111,7 +111,7 @@ could use that same table instead of reimplementing dispatch.
 
 Previously *no* utility supported either flag. `common::errors::run`
 now checks for bare `--help`/`--version` before calling into the
-applet at all, so this is handled once instead of ~54 times. It
+applet at all, so this is handled once instead of ~57 times. It
 deliberately checks only the long form `--help`, never `-h`: several
 applets already use `-h` for their own purposes (`ls -h`, `du -h` =
 human-readable sizes), and GNU coreutils resolves the identical
@@ -151,7 +151,7 @@ Early on this repo was just a handful of `src/bin/*.rs` files, each
 reimplementing its own argument loop, its own `"toolname: error"`
 formatting, and (once things like `ls -l` and `stat` needed it) its
 own permission-bit-to-`rwxrwxrwx` string logic. That doesn't scale
-to ~54 utilities: any fix to how errors are reported, or any POSIX
+to ~57 utilities: any fix to how errors are reported, or any POSIX
 edge case discovered in path handling, would need repeating in every
 file that touched it. `common/` exists so each of those concerns is
 implemented -- and tested, and fixed -- exactly once. See
@@ -206,7 +206,7 @@ functions needed. This is deliberate, not an oversight:
 The one exception: `fuzz/` (see "Fuzz testing" below) is its own
 separate Cargo workspace, specifically so `libfuzzer-sys` -- which
 cargo-fuzz fundamentally requires -- never becomes a dependency of
-`mitos-utils` itself or of any of the ~54 shipped binaries. A plain
+`mitos-utils` itself or of any of the ~57 shipped binaries. A plain
 `cargo build`/`cargo test` at the repo root never sees `fuzz/`'s
 `Cargo.toml` at all.
 
