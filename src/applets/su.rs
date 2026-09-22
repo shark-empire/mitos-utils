@@ -89,5 +89,8 @@ pub fn run(args: Vec<String>) -> AppResult<()> {
             .exec(),
         None => std::process::Command::new(&entry.shell).arg("-l").exec(),
     };
-    Err(AppError::new(format!("cannot run '{}': {err}", entry.shell)))
+    Err(AppError::new(format!(
+        "cannot run '{}': {err}",
+        entry.shell
+    )))
 }
