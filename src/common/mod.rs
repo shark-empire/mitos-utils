@@ -6,6 +6,7 @@
 //! doesn't cover.
 
 pub mod args;
+pub mod auth;
 pub mod errors;
 pub mod output;
 pub mod paths;

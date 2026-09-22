@@ -20,6 +20,16 @@ pub struct Identity {
     pub group: String,
 }
 
+/// A user's home directory, login shell, and primary uid/gid -- the
+/// subset of `/etc/passwd` that `su`/`sudo` need beyond what
+/// `uid_for_name` alone gives them.
+pub struct PasswdEntry {
+    pub uid: u32,
+    pub gid: u32,
+    pub home: String,
+    pub shell: String,
+}
+
 #[cfg(unix)]
 mod ffi {
     use std::os::raw::{c_char, c_int};
@@ -135,12 +145,40 @@ pub fn gid_for_name(name: &str) -> Option<u32> {
     }
 }
 
+/// Full passwd-entry lookup by username (`su`, `sudo`): uid, gid,
+/// home directory, login shell. Falls back to `/` and `/bin/sh` for
+/// a missing home/shell field rather than failing outright -- an
+/// unusual but not invalid passwd entry, and this is only ever a
+/// starting point for `su`/`sudo`'s own further checks, not itself a
+/// security decision.
+#[cfg(unix)]
+pub fn passwd_for_name(name: &str) -> Option<PasswdEntry> {
+    let cname = std::ffi::CString::new(name).ok()?;
+    unsafe {
+        let pw = ffi::getpwnam(cname.as_ptr());
+        if pw.is_null() {
+            None
+        } else {
+            Some(PasswdEntry {
+                uid: (*pw).pw_uid,
+                gid: (*pw).pw_gid,
+                home: cstr_to_string((*pw).pw_dir).unwrap_or_else(|| "/".to_string()),
+                shell: cstr_to_string((*pw).pw_shell).unwrap_or_else(|| "/bin/sh".to_string()),
+            })
+        }
+    }
+}
+
 #[cfg(not(unix))]
 pub fn uid_for_name(_name: &str) -> Option<u32> {
     None
 }
 #[cfg(not(unix))]
 pub fn gid_for_name(_name: &str) -> Option<u32> {
+    None
+}
+#[cfg(not(unix))]
+pub fn passwd_for_name(_name: &str) -> Option<PasswdEntry> {
     None
 }
 
