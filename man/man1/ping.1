@@ -1,0 +1,45 @@
+.TH PING 1 "September 2026" "mitos-utils 0.1.0" "MITOS User Commands"
+.SH NAME
+ping \- send ICMP echo requests to a host
+.SH SYNOPSIS
+.B ping
+.RB [ \-c
+.IR count ]
+.I host
+.SH DESCRIPTION
+Resolve
+.I host
+and send it
+.I count
+ICMPv4 echo requests (default 4), one per second, printing the
+round\-trip time for each reply and a summary (packets sent/received,
+loss percentage, min/avg/max round\-trip time) at the end.
+.P
+Tries an unprivileged Linux "ping socket" first
+.RB ( SOCK_DGRAM
++
+.BR IPPROTO_ICMP ,
+gated by the
+.B net.ipv4.ping_group_range
+sysctl) and only falls back to a raw socket -- which needs root or
+.B CAP_NET_RAW
+-- if that's refused. On a system with a permissive
+.B ping_group_range
+this often needs no special privilege at all.
+.SH NOTES
+IPv4 only -- ICMPv6 is a different protocol number with a different
+checksum rule, not implemented yet. No
+.BR \-i / \-W
+to change the interval or per\-reply timeout (fixed at 1 second each
+for now). No signal handler for an early Ctrl\-C summary -- the fixed
+default count exists partly so a plain
+.B "ping host"
+can't hang forever by default.
+.SH GLOBAL OPTIONS
+Every mitos-utils command additionally accepts \fB\-\-help\fR and \fB\-\-version\fR, and \fB\-\-\fR to mark the end of options.
+.SH EXIT STATUS
+0 if at least one reply was received, 1 if none were, 2 on a usage
+error.
+.SH SEE ALSO
+.BR mitos\-box (1),
+.BR mitos\-utils\-compat (7)
