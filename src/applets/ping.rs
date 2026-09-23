@@ -160,7 +160,11 @@ fn resolve_ipv4(host: &str) -> AppResult<Ipv4Addr> {
             std::net::SocketAddr::V6(_) => None,
         })
         .next()
-        .ok_or_else(|| AppError::new(format!("'{host}' has no IPv4 address (IPv6 targets aren't supported yet)")))
+        .ok_or_else(|| {
+            AppError::new(format!(
+                "'{host}' has no IPv4 address (IPv6 targets aren't supported yet)"
+            ))
+        })
 }
 
 /// Tries the unprivileged Linux ping-socket first, falls back to a
@@ -236,7 +240,12 @@ fn send_echo(sock: &RawSocket, dest: Ipv4Addr, identifier: u16, sequence: u16) -
 /// socket, everything else the kernel would otherwise deliver here
 /// too -- another program's ping, some other ICMP message type -- is
 /// silently skipped rather than misreported as this one's reply.
-fn receive_reply(sock: &RawSocket, is_ping_socket: bool, identifier: u16, sequence: u16) -> Option<()> {
+fn receive_reply(
+    sock: &RawSocket,
+    is_ping_socket: bool,
+    identifier: u16,
+    sequence: u16,
+) -> Option<()> {
     let mut buf = [0u8; 128];
     loop {
         let received = unsafe {
@@ -358,9 +367,7 @@ pub fn run(args: Vec<String>) -> AppResult<()> {
         100.0 * (sent - received) as f64 / sent as f64
     };
     println!("\n--- {host} ping statistics ---");
-    println!(
-        "{sent} packets transmitted, {received} received, {loss_pct:.0}% packet loss"
-    );
+    println!("{sent} packets transmitted, {received} received, {loss_pct:.0}% packet loss");
     if !rtts.is_empty() {
         let millis: Vec<f64> = rtts.iter().map(|d| d.as_secs_f64() * 1000.0).collect();
         let min = millis.iter().cloned().fold(f64::INFINITY, f64::min);
