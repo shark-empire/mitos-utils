@@ -49,6 +49,11 @@ also reachable through the single multiplexed binary,
 
 - `ps` -- list running processes (Linux).
 - `kill [-SIGNAL] PID...` -- send a signal to a process.
+- `pgrep PATTERN` -- list PIDs whose command name matches PATTERN.
+- `pkill [-SIGNAL] PATTERN` -- signal every process whose command name matches PATTERN.
+- `nice [-n ADJUSTMENT] COMMAND [ARGS...]` -- run COMMAND at an adjusted priority.
+- `nproc` -- print the number of available processing units.
+- `lscpu` -- print basic CPU information.
 - `sleep DURATION` -- pause (accepts `s`/`m`/`h` suffixes).
 - `date [+FORMAT]` -- print the current date and time (UTC).
 - `uptime` -- print system uptime (Linux).
@@ -65,6 +70,7 @@ also reachable through the single multiplexed binary,
 
 - `df [PATH...]` -- report filesystem space usage (Linux).
 - `du [-h] [-s] [PATH...]` -- estimate directory space usage.
+- `lsblk` -- list block devices and their partitions.
 - `mount` / `mount SOURCE TARGET -t FSTYPE` -- list or create mounts.
 - `umount TARGET` -- unmount a filesystem.
 - `sync` -- flush filesystem buffers to disk.
