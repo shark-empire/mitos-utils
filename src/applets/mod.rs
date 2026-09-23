@@ -1,6 +1,6 @@
 //! Every mitos-utils applet as a callable library function, plus a
 //! name -> (usage, function) dispatch table used by `mitos-box`
-//! (`src/bin/mitos-box.rs`) to act as all ~58 of them from one
+//! (`src/bin/mitos-box.rs`) to act as all ~64 of them from one
 //! binary, busybox/toybox-style. Each `src/bin/<name>.rs` is a thin
 //! wrapper that also calls straight into the matching module here --
 //! see docs/architecture.md for why the crate is split this way.
@@ -39,10 +39,16 @@ pub mod id;
 pub mod kill;
 pub mod ln;
 pub mod ls;
+pub mod lsblk;
+pub mod lscpu;
 pub mod mkdir;
 pub mod mount;
 pub mod mv;
+pub mod nice;
+pub mod nproc;
+pub mod pgrep;
 pub mod ping;
+pub mod pkill;
 pub mod printenv;
 pub mod printf;
 pub mod ps;
@@ -81,7 +87,7 @@ pub type AppletFn = fn(Vec<String>) -> AppResult<()>;
 
 /// `(name, usage, run)` for every applet, in the same order as
 /// `docs/commands.md`. `mitos-box` looks names up here; nothing else
-/// in the crate needs to enumerate all 58 by hand.
+/// in the crate needs to enumerate all 64 by hand.
 pub const APPLETS: &[(&str, &str, AppletFn)] = &[
     ("cat", cat::USAGE, cat::run),
     ("ls", ls::USAGE, ls::run),
@@ -141,4 +147,10 @@ pub const APPLETS: &[(&str, &str, AppletFn)] = &[
     ("sudo", sudo::USAGE, sudo::run),
     ("service", service::USAGE, service::run),
     ("ping", ping::USAGE, ping::run),
+    ("pgrep", pgrep::USAGE, pgrep::run),
+    ("pkill", pkill::USAGE, pkill::run),
+    ("nice", nice::USAGE, nice::run),
+    ("nproc", nproc::USAGE, nproc::run),
+    ("lsblk", lsblk::USAGE, lsblk::run),
+    ("lscpu", lscpu::USAGE, lscpu::run),
 ];
