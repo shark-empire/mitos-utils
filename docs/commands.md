@@ -76,6 +76,10 @@ also reachable through the single multiplexed binary,
 - `chown [-R] OWNER[:GROUP] FILE...` -- change file owner/group.
 - `chgrp [-R] GROUP FILE...` -- change file group.
 
+## Networking
+
+- `ping [-c COUNT] HOST` -- send ICMPv4 echo requests (IPv4 only, default count 4).
+
 ## Privilege escalation
 
 **`su`/`sudo` have not been independently security-reviewed -- see
