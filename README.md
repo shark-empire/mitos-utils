@@ -1,13 +1,13 @@
 # mitos-utils
 
 Core system utilities for [MITOS](../../mitosos) -- a coreutils-style
-suite of ~57 small userspace programs (`cat`, `ls`, `grep`, `chmod`,
+suite of ~58 small userspace programs (`cat`, `ls`, `grep`, `chmod`,
 `ps`, ...), each one both a standalone binary *and* a plain callable
 Rust function, sharing a small common library for error handling,
 path logic, permission formatting, user/group lookups, and
 TOCTOU-safe recursive directory operations. Also buildable as a
 single multiplexed binary (`mitos-box`, busybox/toybox-style) instead
-of ~57 separate binaries.
+of ~58 separate binaries.
 
 ## Status
 
@@ -45,9 +45,9 @@ A living checklist -- update it as items get crossed off for real
 
 ### Done
 
-- [x] All 57 utilities + `common` library (errors, output, paths,
+- [x] All 58 utilities + `common` library (errors, output, paths,
       permissions, users)
-- [x] Zero dependencies for the ~57 coreutils-style applets and
+- [x] Zero dependencies for the ~58 coreutils-style applets and
       `common` (`fuzz/` is one deliberate, isolated exception).
       `src/ipc.rs` (terminal/shell IPC, not one of the 50 utilities)
       is the other -- it's what the other MITOS components use to
@@ -71,7 +71,7 @@ A living checklist -- update it as items get crossed off for real
       (`.github/workflows/ci.yml`) -- **written, not yet run**
 - [x] Fuzz test scaffolding: 4 targets (`printf`, `tr`, `cut`'s field
       parser, `chmod`'s mode parser) -- **written, not yet run**
-- [x] Real `man` pages: all 57 utilities + `mitos-box(1)` + 3
+- [x] Real `man` pages: all 58 utilities + `mitos-box(1)` + 3
       overview pages (`man/man1/`, `man/man7/`)
 - [x] Integration API reference for other MITOS crates
       (`docs/integration.md`)
@@ -156,6 +156,7 @@ A living checklist -- update it as items get crossed off for real
 - [x] `date`, `find`, `which`, `false` added -- the clearest gaps against MITOS Utils's spec categories that were safe to fill without a design discussion first (date/time and a chunk of filesystem/environment-inspection had nothing; `false` was just missing next to `true`). `date` is UTC-only (no `$TZ`, no `-s/--set`); `find` covers `-name`/`-type`/`-maxdepth`/`-mindepth` only (no `-exec`, `-size`, `-mtime`, character classes). Both are documented gaps here and in their man pages, not silent ones.
 - [x] `su`, `sudo` added -- see the security section above before installing either setuid anywhere real. `sudo` uses `/etc/mitos-sudoers` (one username per line; see `etc/mitos-sudoers.example`), refuses to trust it unless it's root-owned and not group/other-writable, and is deliberately smaller than real sudo (no per-command rules, `NOPASSWD`, timestamp caching, or `-u`).
 - [x] `service` added -- a thin client for mitos-services' real control-socket protocol (status/reload/ping/targets/isolate/launch/apps/logs). No per-unit start/stop/restart because that daemon doesn't have one yet to wrap.
+- [x] `ping` added -- IPv4 only (ICMPv6 is a different protocol/checksum, deferred), tries an unprivileged Linux ping-socket before falling back to a raw socket, fixed 1s interval/timeout and a default count of 4 (no infinite-by-default footgun, no Ctrl-C summary handler to earn that).
 
 ## Layout
 
