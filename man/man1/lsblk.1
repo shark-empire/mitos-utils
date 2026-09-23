@@ -1,0 +1,25 @@
+.TH LSBLK 1 "September 2026" "mitos-utils 0.1.0" "MITOS User Commands"
+.SH NAME
+lsblk \- list block devices and their partitions
+.SH SYNOPSIS
+.B lsblk
+.SH DESCRIPTION
+List every block device under
+.B /sys/block
+(Linux) with its size and whether it's read-only, followed by its
+partitions if any. A summary, not a full replica of the real
+.BR lsblk (1)
+-- filesystem type, UUID, and mountpoint aren't covered, since
+identifying a filesystem means parsing its own superblock format,
+which
+.BR libblkid
+does and this doesn't yet.
+.SH GLOBAL OPTIONS
+Every mitos-utils command additionally accepts \fB\-\-help\fR and \fB\-\-version\fR.
+.SH EXIT STATUS
+0 on success, non-zero if
+.B /sys/block
+couldn't be read.
+.SH SEE ALSO
+.BR df (1),
+.BR mitos\-box (1)

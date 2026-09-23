@@ -1,0 +1,33 @@
+.TH PKILL 1 "September 2026" "mitos-utils 0.1.0" "MITOS User Commands"
+.SH NAME
+pkill \- signal processes whose command name matches a pattern
+.SH SYNOPSIS
+.B pkill
+.RB [ \-SIGNAL ]
+.I pattern
+.SH DESCRIPTION
+Send a signal (default
+.BR SIGTERM )
+to every process whose command name matches
+.IR pattern ,
+using the exact same matching
+.BR pgrep (1)
+does. Accepts the same signal forms as
+.BR kill (1):
+.BR \-9 / \-KILL ,
+.BR \-15 / \-TERM ,
+.BR \-1 / \-HUP ,
+.BR \-2 / \-INT ,
+or a bare
+.BI \- n
+for signal number
+.IR n .
+.SH GLOBAL OPTIONS
+Every mitos-utils command additionally accepts \fB\-\-help\fR and \fB\-\-version\fR.
+.SH EXIT STATUS
+0 if every matching process was signaled successfully, 1 if none
+matched or any signal failed, 2 on a usage error.
+.SH SEE ALSO
+.BR pgrep (1),
+.BR kill (1),
+.BR mitos\-box (1)

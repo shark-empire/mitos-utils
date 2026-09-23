@@ -1,0 +1,16 @@
+.TH NPROC 1 "September 2026" "mitos-utils 0.1.0" "MITOS User Commands"
+.SH NAME
+nproc \- print the number of available processing units
+.SH SYNOPSIS
+.B nproc
+.SH DESCRIPTION
+Print the number of processing units available to this process, via
+Rust's own
+.BR std::thread::available_parallelism .
+.SH GLOBAL OPTIONS
+Every mitos-utils command additionally accepts \fB\-\-help\fR and \fB\-\-version\fR.
+.SH EXIT STATUS
+0 on success, non-zero if the count couldn't be determined.
+.SH SEE ALSO
+.BR lscpu (1),
+.BR mitos\-box (1)

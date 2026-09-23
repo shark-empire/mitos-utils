@@ -1,0 +1,26 @@
+.TH PGREP 1 "September 2026" "mitos-utils 0.1.0" "MITOS User Commands"
+.SH NAME
+pgrep \- list PIDs of processes whose command name matches a pattern
+.SH SYNOPSIS
+.B pgrep
+.I pattern
+.SH DESCRIPTION
+List the PID and command name of every process whose
+.B /proc/<pid>/comm
+matches
+.IR pattern ,
+a shell glob (\fB*\fR/\fB?\fR, no character classes) -- the same
+matcher
+.BR find (1)'s
+.B \-name
+uses. Matches the short command name, not the full command line with
+arguments. Never matches this invocation of \fBpgrep\fR itself.
+.SH GLOBAL OPTIONS
+Every mitos-utils command additionally accepts \fB\-\-help\fR and \fB\-\-version\fR, and \fB\-\-\fR to mark the end of options.
+.SH EXIT STATUS
+0 if at least one process matched, 1 if none did, 2 on a usage error.
+.SH SEE ALSO
+.BR pkill (1),
+.BR ps (1),
+.BR find (1),
+.BR mitos\-box (1)

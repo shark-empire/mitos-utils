@@ -1,0 +1,21 @@
+.TH LSCPU 1 "September 2026" "mitos-utils 0.1.0" "MITOS User Commands"
+.SH NAME
+lscpu \- print basic CPU information
+.SH SYNOPSIS
+.B lscpu
+.SH DESCRIPTION
+Print CPU count, vendor ID, model name, clock speed, and cache size
+from
+.B /proc/cpuinfo
+(Linux). A summary, not a full replica of the real
+.BR lscpu (1)
+-- cache topology, NUMA nodes, and CPU flags aren't covered.
+.SH GLOBAL OPTIONS
+Every mitos-utils command additionally accepts \fB\-\-help\fR and \fB\-\-version\fR.
+.SH EXIT STATUS
+0 on success, non-zero if
+.B /proc/cpuinfo
+couldn't be read.
+.SH SEE ALSO
+.BR nproc (1),
+.BR mitos\-box (1)

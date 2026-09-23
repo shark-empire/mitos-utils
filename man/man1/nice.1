@@ -1,0 +1,29 @@
+.TH NICE 1 "September 2026" "mitos-utils 0.1.0" "MITOS User Commands"
+.SH NAME
+nice \- run a command at an adjusted scheduling priority
+.SH SYNOPSIS
+.B nice
+.RB [ \-n
+.IR adjustment ]
+.I command
+.RI [ args ...]
+.SH DESCRIPTION
+Adjust this process's niceness by
+.I adjustment
+(default 10; higher is lower priority) via
+.BR setpriority (2),
+then run
+.I command
+in its place.
+.SH GLOBAL OPTIONS
+Every mitos-utils command additionally accepts \fB\-\-help\fR and \fB\-\-version\fR.
+.SH EXIT STATUS
+Whatever
+.I command
+exits with, since a successful run execs it in place of this
+process. Non-zero on a usage error or if the priority couldn't be
+set (e.g. a negative adjustment without the privilege to lower
+niceness).
+.SH SEE ALSO
+.BR ps (1),
+.BR mitos\-box (1)
