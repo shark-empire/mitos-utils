@@ -22,7 +22,7 @@ pub const USAGE: &str =
 /// run of characters (including none), `?` matches exactly one.
 /// No character classes -- kept small on purpose, the same call this
 /// crate already made for `grep`'s own regex engine.
-fn glob_match(pattern: &str, text: &str) -> bool {
+pub fn glob_match(pattern: &str, text: &str) -> bool {
     fn go(p: &[char], t: &[char]) -> bool {
         match p.first() {
             None => t.is_empty(),
