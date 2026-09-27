@@ -86,6 +86,16 @@ also reachable through the single multiplexed binary,
 
 - `ping [-c COUNT] HOST` -- send ICMPv4 echo requests (IPv4 only, default count 4).
 
+## User management
+
+**`useradd`/`groupadd`/`passwd` have not been independently
+security-reviewed -- see README.md's security section before
+installing any of them setuid anywhere real.**
+
+- `useradd [-d HOME] [-s SHELL] USERNAME` -- create a user account (starts locked).
+- `groupadd GROUP` -- create a group.
+- `passwd [USERNAME]` -- change a password (default: your own).
+
 ## Privilege escalation
 
 **`su`/`sudo` have not been independently security-reviewed -- see
