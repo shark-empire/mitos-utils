@@ -13,7 +13,7 @@ fi
 
 cd fuzz || exit 1
 
-targets=("printf_render" "tr_translate" "cut_field_list" "chmod_parse_mode")
+targets=("printf_render" "tr_translate" "cut_field_list" "chmod_parse_mode" "tar_scan_headers")
 
 for target in "${targets[@]}"; do
     echo "==> Fuzzing $target (10s limit)..."
