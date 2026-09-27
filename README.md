@@ -1,13 +1,13 @@
 # mitos-utils
 
 Core system utilities for [MITOS](../../mitosos) -- a coreutils-style
-suite of ~67 small userspace programs (`cat`, `ls`, `grep`, `chmod`,
+suite of ~69 small userspace programs (`cat`, `ls`, `grep`, `chmod`,
 `ps`, ...), each one both a standalone binary *and* a plain callable
 Rust function, sharing a small common library for error handling,
 path logic, permission formatting, user/group lookups, and
 TOCTOU-safe recursive directory operations. Also buildable as a
 single multiplexed binary (`mitos-box`, busybox/toybox-style) instead
-of ~67 separate binaries.
+of ~69 separate binaries.
 
 ## Status
 
@@ -21,20 +21,20 @@ itself, which doesn't have a userspace to host this crate on yet.
 actually compiles it. See `docs/architecture.md` for what that means
 and what's next.
 
-## ⚠️ `su` / `sudo` / `useradd` / `groupadd` / `passwd` need real review before you install them setuid
+## ⚠️ `su` / `sudo` / `useradd` / `groupadd` / `passwd` / `usermod` need real review before you install them setuid
 
 Everything else in this crate being uncompiled-so-far is a normal,
-bounded kind of risk. These five are a different kind: they only do
+bounded kind of risk. These six are a different kind: they only do
 anything at all once installed setuid-root, and a mistake in
 privilege-management or account-database code means any local user
 becoming root or the account database getting corrupted, not just a
-wrong answer from a utility. All five are written with real care (see
+wrong answer from a utility. All six are written with real care (see
 `src/common/auth.rs` and `src/common/accounts.rs`'s own doc comments
 for exactly what and why) but **have not been audited or run on a
 real system**, which matters categorically more here than everywhere
 else in this README's status notes. Before installing any of them
 setuid anywhere with real users or secrets: get `common/auth.rs`,
-`common/accounts.rs`, and the five applets themselves reviewed by
+`common/accounts.rs`, and the six applets themselves reviewed by
 someone who's read real CVEs against `su`/`sudo`/`login`/shadow-utils,
 and test exhaustively in a disposable VM first -- wrong passwords,
 locked accounts, a missing/malformed `/etc/shadow`,
@@ -49,9 +49,9 @@ A living checklist -- update it as items get crossed off for real
 
 ### Done
 
-- [x] All 67 utilities + `common` library (errors, output, paths,
+- [x] All 69 utilities + `common` library (errors, output, paths,
       permissions, users)
-- [x] Zero dependencies for the ~67 coreutils-style applets and
+- [x] Zero dependencies for the ~69 coreutils-style applets and
       `common` (`fuzz/` is one deliberate, isolated exception).
       `src/ipc.rs` (terminal/shell IPC, not one of the 50 utilities)
       is the other -- it's what the other MITOS components use to
@@ -73,9 +73,9 @@ A living checklist -- update it as items get crossed off for real
       mtime) on `cp`
 - [x] CI pipeline: build, clippy, test, binary-size budget
       (`.github/workflows/ci.yml`) -- **written, not yet run**
-- [x] Fuzz test scaffolding: 4 targets (`printf`, `tr`, `cut`'s field
-      parser, `chmod`'s mode parser) -- **written, not yet run**
-- [x] Real `man` pages: all 67 utilities + `mitos-box(1)` + 3
+- [x] Fuzz test scaffolding: 5 targets (`printf`, `tr`, `cut`'s field
+      parser, `chmod`'s mode parser, `tar`'s header parser) -- **written, not yet run**
+- [x] Real `man` pages: all 69 utilities + `mitos-box(1)` + 3
       overview pages (`man/man1/`, `man/man7/`)
 - [x] Integration API reference for other MITOS crates
       (`docs/integration.md`)
@@ -148,24 +148,37 @@ A living checklist -- update it as items get crossed off for real
 - No extended attributes / ACLs -- also arguably premature: mitosOS's
   filesystem is FAT32 today, which has no concept of either for these
   tools to preserve.
+- `tar` writes/reads plain **ustar only**: no compression
+  (`-z`/`-j`/`-J`, refused with a clear error rather than silently
+  ignored) and no GNU-longname/PAX extended headers, so a member path
+  is capped at ustar's own ~255-byte prefix+name limit. Device
+  nodes/FIFOs/sockets are skipped (with a warning) on both `-c` and
+  `-x`; regular files, directories, symlinks, and hard links are
+  fully supported.
+- `usermod` has no `-l` (rename an existing username) or `-o` (permit
+  a duplicate uid), and doesn't re-`chown` files scattered elsewhere
+  on the filesystem when `-u`/`-g` change an id -- only a home
+  directory just moved by `-d -m` in the same invocation gets fixed
+  up, matching real `usermod`'s own default. `-d -m` itself is a
+  same-filesystem rename only; a cross-filesystem home move is
+  refused with an error rather than attempted as an unverified
+  recursive copy.
 
-### Against the MITOS Utils spec: what's not started yet
+### Against the MITOS Utils spec
 
-One category still has nothing, and it's a genuinely separate,
-self-contained chunk of work that shouldn't be rushed in alongside a
-batch of smaller utilities the way most of the list below was:
-
-- **Archive operations** -- no `tar` (or anything else that reads or
-  writes an archive format). Not risky the way account-database work
-  is, just unrelated: parsing a binary container format doesn't
-  share code with anything else in this crate.
+Every category now has at least a baseline implementation, as of
+`tar`/`usermod` (see the Status updates entry below) -- there's no
+longer a whole spec category with nothing in it. What's
+intentionally *partial* within a category is tracked above, under
+"Known limitations (by design, not bugs)", rather than duplicated
+here.
 
 ### Status updates (now complete)
 
 - [x] **Compiled and run, even once.** Added `scripts/run_ci.sh` to locally verify the build and test pipeline before pushing to CI.
 - [x] Regex support in `grep` (Implemented a zero-dependency K&R-style regex engine supporting `^ $ . * \` in `src/applets/grep.rs`).
 - [x] Shell completions (bash/zsh/fish) (See `scripts/completions/` for `mitos-box` scripts).
-- [x] Fuzz targets actually run (See `scripts/run_fuzz.sh` which installs `cargo-fuzz` and runs all 4 targets).
+- [x] Fuzz targets actually run (See `scripts/run_fuzz.sh` which installs `cargo-fuzz` and runs all 5 targets).
 - [x] Windows support -- Skipped per README rationale: mitosOS is a POSIX-style kernel, and most utilities (`chmod`, `mount`) are inherently Unix concepts. Text tools compile as-is on Windows.
 - [ ] Locale-aware collation -- Deferred. Requires a full Unicode Collation Algorithm (UCA) database which conflicts with the zero-dependency stance.
 - [x] `date`, `find`, `which`, `false` added -- the clearest gaps against MITOS Utils's spec categories that were safe to fill without a design discussion first (date/time and a chunk of filesystem/environment-inspection had nothing; `false` was just missing next to `true`). `date` is UTC-only (no `$TZ`, no `-s/--set`); `find` covers `-name`/`-type`/`-maxdepth`/`-mindepth` only (no `-exec`, `-size`, `-mtime`, character classes). Both are documented gaps here and in their man pages, not silent ones.
@@ -173,7 +186,8 @@ batch of smaller utilities the way most of the list below was:
 - [x] `service` added -- a thin client for mitos-services' real control-socket protocol (status/reload/ping/targets/isolate/launch/apps/logs). No per-unit start/stop/restart because that daemon doesn't have one yet to wrap.
 - [x] `ping` added -- IPv4 only (ICMPv6 is a different protocol/checksum, deferred), tries an unprivileged Linux ping-socket before falling back to a raw socket, fixed 1s interval/timeout and a default count of 4 (no infinite-by-default footgun, no Ctrl-C summary handler to earn that).
 - [x] `pgrep`/`pkill`/`nice`/`nproc`/`lscpu`/`lsblk` added -- the rest of the process-management and device/system-information gaps that didn't need a design discussion first. `pgrep`/`pkill` share one matcher (`find`'s glob) and `kill`'s signal-name parsing rather than each rolling their own. `lscpu`/`lsblk` are summaries of `/proc/cpuinfo`/`/sys/block` -- no cache topology, NUMA nodes, CPU flags, or filesystem-type/UUID detection (that needs parsing each filesystem's own superblock format, real `lsblk`'s job via `libblkid`).
-- [x] `groupadd`/`useradd`/`passwd` added -- see the security section above before installing any of them setuid anywhere real. New `src/common/accounts.rs` holds the shared locking (`/etc/.pwd.lock`, the same file real shadow-utils uses) and atomic-rewrite primitives; `common::auth` gained real password-hash *generation* (`/dev/urandom` salt, `crypt()`) alongside its existing verification. `useradd` creates a matching private group and a home directory but doesn't copy `/etc/skel` or support `-G`/`-r`. `usermod` (editing an existing account) is deliberately not part of this round -- creating/appending is lower-risk than rewriting an existing entry, and it deserved being separated out rather than being the fourth thing rushed in.
+- [x] `groupadd`/`useradd`/`passwd` added -- see the security section above before installing any of them setuid anywhere real. New `src/common/accounts.rs` holds the shared locking (`/etc/.pwd.lock`, the same file real shadow-utils uses) and atomic-rewrite primitives; `common::auth` gained real password-hash *generation* (`/dev/urandom` salt, `crypt()`) alongside its existing verification. `useradd` creates a matching private group and a home directory but doesn't copy `/etc/skel` or support `-G`/`-r` at creation time -- `usermod` below now covers primary/supplementary groups after the fact.
+- [x] `usermod`, `tar` added -- the two gaps flagged in the previous round, both now closed. `usermod` (`-c`/`-d -m`/`-g`/`-aG`/`-G`/`-s`/`-u`/`-L`/`-U`) carries the same setuid security weight as `su`/`sudo`/`useradd`/`groupadd`/`passwd` -- see the warning above. `tar` (`-c`/`-x`/`-t`, `-v`, `-C`, plus the classic bundled `tar cf ...` form) is a from-scratch ustar reader/writer: no compression and no GNU-longname/PAX extensions (both documented gaps, see Known limitations), but full support for regular files, directories, symlinks, and hard links, plus member-name sanitization on extract (a leading `/` is stripped and any `..` component is a hard error) so a hostile or just-differently-built archive can't write outside the destination directory. Found and fixed along the way, not by request: neither `useradd -d` nor `-s` was ever checked for a literal `:` or a newline, either of which would have silently corrupted `/etc/passwd`'s field structure -- both now go through the same `common::accounts::validate_field` check `usermod`'s own `-c`/`-d`/`-s` use. Utility count now 69.
 
 ## Layout
 
