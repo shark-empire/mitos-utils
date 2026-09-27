@@ -228,8 +228,8 @@ pub fn verify_password(username: &str, password: &str) -> io::Result<bool> {
 
     let c_password =
         CString::new(password).map_err(|e| io::Error::new(io::ErrorKind::InvalidInput, e))?;
-    let c_stored =
-        CString::new(stored.as_str()).map_err(|e| io::Error::new(io::ErrorKind::InvalidInput, e))?;
+    let c_stored = CString::new(stored.as_str())
+        .map_err(|e| io::Error::new(io::ErrorKind::InvalidInput, e))?;
 
     let result_ptr = unsafe { ffi::crypt(c_password.as_ptr(), c_stored.as_ptr()) };
     if result_ptr.is_null() {
