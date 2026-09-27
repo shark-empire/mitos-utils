@@ -45,7 +45,10 @@ fn tar_bin() -> &'static str {
 }
 
 fn run(args: &[&str]) -> Output {
-    Command::new(tar_bin()).args(args).output().expect("spawn tar")
+    Command::new(tar_bin())
+        .args(args)
+        .output()
+        .expect("spawn tar")
 }
 
 #[test]
@@ -91,7 +94,10 @@ fn create_then_extract_round_trips_files_dirs_and_symlinks() {
         String::from_utf8_lossy(&extract.stderr)
     );
 
-    assert_eq!(std::fs::read(dest.join("hello.txt")).unwrap(), b"hello, mitos");
+    assert_eq!(
+        std::fs::read(dest.join("hello.txt")).unwrap(),
+        b"hello, mitos"
+    );
     assert_eq!(
         std::fs::read(dest.join("subdir/nested.txt")).unwrap(),
         b"nested contents"
