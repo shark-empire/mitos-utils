@@ -1,0 +1,49 @@
+.TH USERMOD 1 "September 2026" "mitos-utils 0.1.0" "MITOS User Commands"
+.SH NAME
+usermod \- modify an existing user account
+.SH SYNOPSIS
+.B usermod
+[\fB\-c\fR \fIcomment\fR] [\fB\-d\fR \fIhome\fR [\fB\-m\fR]] [\fB\-g\fR \fIgroup\fR] [\fB\-aG\fR|\fB\-G\fR \fIgroups\fR] [\fB\-s\fR \fIshell\fR] [\fB\-u\fR \fIuid\fR] [\fB\-L\fR|\fB\-U\fR] \fIusername\fR
+.SH DESCRIPTION
+Modify \fIusername\fR's entry in \fB/etc/passwd\fR, \fB/etc/shadow\fR, and \fB/etc/group\fR. Must be run as root (or installed setuid-root) -- unlike \fBpasswd\fR(1), there is no self-service mode.
+.SH OPTIONS
+.TP
+.B \-c \fIcomment\fR
+Set the GECOS/comment field.
+.TP
+.B \-d \fIhome\fR
+Set the home directory field. Combine with \fB\-m\fR to move the existing home directory's contents to the new location (same-filesystem rename only, see LIMITATIONS).
+.TP
+.B \-g \fIgroup\fR
+Set the primary group by name; the group must already exist.
+.TP
+.B \-aG \fIgroups\fR
+Append \fIusername\fR to each comma-separated supplementary group, without removing it from any group it's already in.
+.TP
+.B \-G \fIgroups\fR
+Replace the full supplementary-group list with exactly the given comma-separated groups, removing \fIusername\fR from any group not named -- matches real \fBusermod\fR(8)'s own semantics. The summary line printed on success always states exactly what was added and removed.
+.TP
+.B \-u \fIuid\fR
+Set the numeric uid. Refuses a uid already in use by another account.
+.TP
+.B \-L
+Lock the account -- the same \fB!\fR-prefix convention \fBpasswd\fR(1) and a freshly \fBuseradd\fR(1)'d account both use.
+.TP
+.B \-U
+Unlock the account. Refuses if it was never given a real password in the first place, since that would reveal an empty hash -- run \fBpasswd\fR(1) first in that case.
+.SH DELIBERATELY NARROWER THAN REAL USERMOD
+No \fB\-l\fR (rename -- would have to ripple through \fB/etc/shadow\fR's key, every group's member list, and conventionally the home directory path too, so it's left out entirely rather than half-done), no \fB\-o\fR (permit a duplicate uid). Changing \fB\-u\fR or \fB\-g\fR does not re-\fBchown\fR files scattered elsewhere on the filesystem -- only a home directory just moved by \fB\-d \-m\fR in the same invocation gets its ownership fixed up -- matching real \fBusermod\fR(8)'s own default.
+.SH LIMITATIONS
+\fB\-d \-m\fR only performs a same-filesystem rename; a cross-filesystem home directory move is refused with an error explaining how to move it by hand first, rather than attempting an unverified recursive copy.
+.SH SECURITY
+.B This has not been independently security-reviewed.
+Modifies \fB/etc/passwd\fR, \fB/etc/shadow\fR, and \fB/etc/group\fR directly, under the same lock file real shadow-utils uses. Read \fBcommon::accounts\fR in the source before installing this setuid anywhere that matters -- the same weight as \fBsu\fR(1)/\fBsudo\fR(1)/\fBuseradd\fR(1)/\fBgroupadd\fR(1)/\fBpasswd\fR(1)'s own SECURITY sections. Get it reviewed and test it in a disposable VM first.
+.SH GLOBAL OPTIONS
+Every mitos-utils command additionally accepts \fB\-\-help\fR and \fB\-\-version\fR, and \fB\-\-\fR to mark the end of options.
+.SH EXIT STATUS
+0 on success, non-zero if the account (or a named group) doesn't exist, the caller isn't root, no changes were requested, or the database couldn't be locked/written.
+.SH SEE ALSO
+.BR useradd (1),
+.BR passwd (1),
+.BR groupadd (1),
+.BR mitos\-box (1)

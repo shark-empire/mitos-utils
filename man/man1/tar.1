@@ -1,0 +1,42 @@
+.TH TAR 1 "September 2026" "mitos-utils 0.1.0" "MITOS User Commands"
+.SH NAME
+tar \- create, list, or extract a ustar archive
+.SH SYNOPSIS
+.B tar
+{\fB\-c\fR|\fB\-x\fR|\fB\-t\fR} \fB\-f\fR \fIarchive\fR [\fB\-v\fR] [\fB\-C\fR \fIdir\fR] [\fIfile\fR...]
+.br
+.B tar
+\fIcftxv\fR \fIarchive\fR [\fIfile\fR...]
+.SH DESCRIPTION
+Create, list, or extract a POSIX \fBustar\fR archive. The second SYNOPSIS form is the classic bundled-letters style (e.g. \fBtar cf a.tar dir\fR); either form works identically.
+.SH OPTIONS
+.TP
+.B \-c
+Create a new archive from the given files/directories.
+.TP
+.B \-x
+Extract every entry in the archive (or only the \fIfile\fR arguments given, if any) into the current directory, or \fB\-C\fR's directory.
+.TP
+.B \-t
+List the archive's contents (or only the \fIfile\fR arguments given, if any) instead of extracting.
+.TP
+.B \-f \fIarchive\fR
+The archive path. \fB\-\fR means stdin (for \fB\-x\fR/\fB\-t\fR) or stdout (for \fB\-c\fR).
+.TP
+.B \-v
+Print each file name as it's archived or extracted; with \fB\-t\fR, print a long listing (mode, size, name) instead of just the name.
+.TP
+.B \-C \fIdir\fR
+Extract into \fIdir\fR instead of the current directory (created if it doesn't exist). Only affects \fB\-x\fR.
+.SH DELIBERATELY NARROWER THAN REAL TAR
+No compression: \fB\-z\fR/\fB\-j\fR/\fB\-J\fR (gzip/bzip2/xz) are refused outright with a clear error rather than silently misread as a filename or ignored -- this crate stays zero-dependency, and a real compressor is a large chunk of work distinct from the archive format itself. ustar only: no GNU longname/PAX extended headers for names beyond ustar's own ~255-byte limit (a clear error on \fB\-c\fR; an unrecognized header type is skipped with a warning on \fB\-x\fR/\fB\-t\fR rather than misread). No \fB\-r\fR/\fB\-u\fR (append/update an existing archive in place). Device nodes, FIFOs, and sockets are skipped with a warning on both \fB\-c\fR and \fB\-x\fR; regular files, directories, symlinks, and hard links are fully supported.
+.SH SECURITY
+Every member name is sanitized before touching the filesystem on \fB\-x\fR: a leading \fB/\fR is stripped, and any \fB..\fR path component is a hard error for that entry -- an archive cannot force extraction to an absolute path or escape the destination directory, whether or not this same \fBtar\fR wrote it. Ownership (\fBchown\fR) is only restored when the caller is already root, matching real \fBtar\fR; permission bits are always restored.
+.SH GLOBAL OPTIONS
+Every mitos-utils command additionally accepts \fB\-\-help\fR and \fB\-\-version\fR, and \fB\-\-\fR to mark the end of options.
+.SH EXIT STATUS
+0 on success, 1 if any entry failed to archive/extract (processing continues past a single bad entry) or the archive is malformed, 2 on a usage error.
+.SH SEE ALSO
+.BR mitos\-box (1),
+.BR mitos\-utils\-compat (7),
+.BR mitos\-utils\-integration (7)
