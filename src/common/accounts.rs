@@ -181,3 +181,39 @@ pub fn groupname_exists(name: &str) -> bool {
         .map(|c| c.lines().any(|l| l.split(':').next() == Some(name)))
         .unwrap_or(false)
 }
+
+/// Look up a group's gid by name, directly from `/etc/group` -- not
+/// via `getgrnam`/NSS. Consistent with every other lookup in this
+/// module (`next_free_uid`/`next_free_gid`/`*_exists`), and safe
+/// against the same live-file-vs-NSS-cache mismatch those already
+/// avoid by reading the file directly: right after this module's own
+/// `atomic_rewrite` of `/etc/group`, a libc-backed `getgrnam` call
+/// isn't guaranteed to see the new contents immediately if NSS
+/// caching (e.g. `nscd`) is in play, but a fresh `read_to_string`
+/// always does.
+pub fn gid_for_groupname(name: &str) -> Option<u32> {
+    std::fs::read_to_string("/etc/group").ok().and_then(|c| {
+        c.lines()
+            .find(|l| l.split(':').next() == Some(name))
+            .and_then(|l| l.split(':').nth(2))
+            .and_then(|s| s.parse().ok())
+    })
+}
+
+/// Reject a value that would corrupt a colon-delimited account-file
+/// line if written into one verbatim: a literal `:` shifts every
+/// field after it, and a newline injects an extra line outright.
+/// Meant for the free-text fields `useradd`/`usermod` accept (home
+/// directory, shell, GECOS comment) -- usernames and group names
+/// already go through the stricter `validate_username` instead.
+///
+/// This was missing for `useradd`'s `-d`/`-s` until `usermod` needed
+/// the same check for `-c`/`-d`/`-s` and it became obvious both
+/// applets needed it, not just the new one -- `useradd.rs` now calls
+/// this too, not only `usermod.rs`.
+pub fn validate_field(value: &str) -> Result<(), String> {
+    if value.contains(':') || value.contains('\n') || value.contains('\r') {
+        return Err("value may not contain ':' or a newline".to_string());
+    }
+    Ok(())
+}

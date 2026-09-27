@@ -149,12 +149,13 @@ impl SafeDir {
     pub fn open_root(path: &Path) -> io::Result<SafeDir> {
         let meta = std::fs::symlink_metadata(path)?;
         if meta.file_type().is_symlink() {
-            return Err(io::Error::other(
+            return Err(io::Error::new(
+                io::ErrorKind::Other,
                 "refusing to recurse through a symlink at the top of a walk",
             ));
         }
         if !meta.is_dir() {
-            return Err(io::Error::other("not a directory"));
+            return Err(io::Error::new(io::ErrorKind::Other, "not a directory"));
         }
         let file = File::open(path)?;
         Ok(SafeDir { file })
@@ -204,13 +205,16 @@ impl SafeDir {
         let scoped = self.scoped_path(name);
         let pre = std::fs::symlink_metadata(&scoped)?;
         if pre.file_type().is_symlink() {
-            return Err(io::Error::other(format!(
-                "refusing to recurse through symlink '{}'",
-                name
-            )));
+            return Err(io::Error::new(
+                io::ErrorKind::Other,
+                format!("refusing to recurse through symlink '{}'", name),
+            ));
         }
         if !pre.is_dir() {
-            return Err(io::Error::other(format!("'{}' is not a directory", name)));
+            return Err(io::Error::new(
+                io::ErrorKind::Other,
+                format!("'{}' is not a directory", name),
+            ));
         }
         let (pre_dev, pre_ino) = (pre.dev(), pre.ino());
 
@@ -223,10 +227,13 @@ impl SafeDir {
 
         let post = file.metadata()?;
         if post.dev() != pre_dev || post.ino() != pre_ino {
-            return Err(io::Error::other(format!(
-                "'{}' changed during traversal (possible symlink race) -- refusing",
-                name
-            )));
+            return Err(io::Error::new(
+                io::ErrorKind::Other,
+                format!(
+                    "'{}' changed during traversal (possible symlink race) -- refusing",
+                    name
+                ),
+            ));
         }
         Ok(SafeDir { file })
     }
