@@ -38,6 +38,14 @@ defeated the protection on one architecture with no build error to
 catch it. See
 .I src/common/safewalk.rs
 in the mitos\-utils source tree for the full design writeup.
+.PP
+.BR usermod (1)
+also calls into this hardening indirectly: moving a home directory
+with \fB\-d \-m\fR while also changing \fB\-u\fR/\fB\-g\fR in the same
+invocation re\-\fBchown\fRs the moved tree via the same
+.I chown_tree
+this page describes, rather than a second, less\-scrutinized
+recursive walk written just for that one case.
 .SH SCOPE
 This hardening is Linux\-only. Other targets fall back to a plain
 path\-based recursive walk with no symlink\-race protection. This is a
@@ -49,4 +57,5 @@ crate's other FFI \(em see
 .BR chmod (1),
 .BR chown (1),
 .BR chgrp (1),
+.BR usermod (1),
 .BR mitos\-utils\-compat (7)
