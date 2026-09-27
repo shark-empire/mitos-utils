@@ -71,5 +71,7 @@ fn send_all(targets: &[(u32, String)], signal: i32) -> AppResult<()> {
 
 #[cfg(not(unix))]
 fn send_all(_targets: &[(u32, String)], _signal: i32) -> AppResult<()> {
-    Err(AppError::new("signal delivery not available on this target"))
+    Err(AppError::new(
+        "signal delivery not available on this target",
+    ))
 }

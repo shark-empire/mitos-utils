@@ -135,7 +135,12 @@ pub fn run(args: Vec<String>) -> AppResult<()> {
 
     match mode {
         'c' => create_archive(&archive, &files, verbose),
-        'x' => extract_archive(&archive, &directory.unwrap_or_else(|| ".".to_string()), verbose, &files),
+        'x' => extract_archive(
+            &archive,
+            &directory.unwrap_or_else(|| ".".to_string()),
+            verbose,
+            &files,
+        ),
         't' => list_archive(&archive, verbose, &files),
         _ => unreachable!("set_mode_flag only ever stores 'c', 'x', or 't'"),
     }
@@ -220,7 +225,9 @@ fn sanitize_member_name(name: &str) -> AppResult<String> {
         )));
     }
     if stripped.is_empty() {
-        return Err(AppError::new("refusing to extract an empty/root member name"));
+        return Err(AppError::new(
+            "refusing to extract an empty/root member name",
+        ));
     }
     Ok(stripped.to_string())
 }
@@ -306,7 +313,11 @@ fn compute_checksum(block: &[u8; BLOCK_SIZE]) -> u32 {
 }
 
 fn parse_octal(raw: &[u8]) -> u64 {
-    let s: String = raw.iter().take_while(|&&b| b != 0).map(|&b| b as char).collect();
+    let s: String = raw
+        .iter()
+        .take_while(|&&b| b != 0)
+        .map(|&b| b as char)
+        .collect();
     u64::from_str_radix(s.trim(), 8).unwrap_or(0)
 }
 
@@ -404,7 +415,9 @@ fn read_header(reader: &mut dyn Read) -> AppResult<Option<[u8; BLOCK_SIZE]>> {
             if read_total == 0 {
                 return Ok(None);
             }
-            return Err(AppError::new("unexpected end of archive (truncated header block)"));
+            return Err(AppError::new(
+                "unexpected end of archive (truncated header block)",
+            ));
         }
         read_total += n;
     }
@@ -511,7 +524,9 @@ fn create_archive(archive: &str, inputs: &[String], verbose: bool) -> AppResult<
     writer
         .write_all(&[0u8; BLOCK_SIZE * 2])
         .map_err(|e| AppError::new(format!("write error: {e}")))?;
-    writer.flush().map_err(|e| AppError::new(format!("write error: {e}")))?;
+    writer
+        .flush()
+        .map_err(|e| AppError::new(format!("write error: {e}")))?;
     Ok(())
 }
 
@@ -705,7 +720,14 @@ fn extract_archive(archive: &str, dest: &str, verbose: bool, only: &[String]) ->
         };
         let target = dest_root.join(&safe_name);
 
-        let result = extract_one(&entry, dest_root, &target, &mut reader, running_as_root, &mut dir_mtimes);
+        let result = extract_one(
+            &entry,
+            dest_root,
+            &target,
+            &mut reader,
+            running_as_root,
+            &mut dir_mtimes,
+        );
         match result {
             Ok(()) => {
                 if verbose {

@@ -17,8 +17,8 @@ pub const USAGE: &str = "pgrep PATTERN -- list PIDs whose command name matches P
 #[cfg(target_os = "linux")]
 pub(crate) fn matching_processes(pattern: &str) -> AppResult<Vec<(u32, String)>> {
     let my_pid = std::process::id();
-    let entries = std::fs::read_dir("/proc")
-        .map_err(|e| AppError::new(format!("cannot read /proc: {e}")))?;
+    let entries =
+        std::fs::read_dir("/proc").map_err(|e| AppError::new(format!("cannot read /proc: {e}")))?;
     let mut matches = Vec::new();
     for entry in entries.flatten() {
         let Some(pid) = entry

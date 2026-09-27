@@ -22,7 +22,10 @@ pub fn run(args: Vec<String>) -> AppResult<()> {
     parts.extend(forced);
 
     let caller = users::current_identity();
-    let target = parts.into_iter().next().unwrap_or_else(|| caller.user.clone());
+    let target = parts
+        .into_iter()
+        .next()
+        .unwrap_or_else(|| caller.user.clone());
 
     if target != caller.user && caller.euid != 0 {
         return Err(AppError::new(format!(
