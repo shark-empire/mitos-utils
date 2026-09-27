@@ -53,9 +53,7 @@ fn set_priority(adjustment: i32) -> AppResult<()> {
 
 #[cfg(not(unix))]
 fn set_priority(_adjustment: i32) -> AppResult<()> {
-    Err(AppError::new(
-        "priority adjustment not available on this target",
-    ))
+    Err(AppError::new("priority adjustment not available on this target"))
 }
 
 #[cfg(unix)]
@@ -69,7 +67,5 @@ fn exec_command(program: &str, args: &[String]) -> AppResult<()> {
 
 #[cfg(not(unix))]
 fn exec_command(_program: &str, _args: &[String]) -> AppResult<()> {
-    Err(AppError::new(
-        "running a replacement process not available on this target",
-    ))
+    Err(AppError::new("running a replacement process not available on this target"))
 }

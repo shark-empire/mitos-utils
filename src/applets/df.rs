@@ -51,8 +51,8 @@ pub fn run(args: Vec<String>) -> AppResult<()> {
     };
 
     println!(
-        "{:<20} {:>10} {:>10} {:>10}  Mounted on",
-        "Filesystem", "Size", "Used", "Avail"
+        "{:<20} {:>10} {:>10} {:>10}  {}",
+        "Filesystem", "Size", "Used", "Avail", "Mounted on"
     );
 
     let mut had_error = false;

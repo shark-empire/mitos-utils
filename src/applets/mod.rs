@@ -1,6 +1,6 @@
 //! Every mitos-utils applet as a callable library function, plus a
 //! name -> (usage, function) dispatch table used by `mitos-box`
-//! (`src/bin/mitos-box.rs`) to act as all ~64 of them from one
+//! (`src/bin/mitos-box.rs`) to act as all ~69 of them from one
 //! binary, busybox/toybox-style. Each `src/bin/<name>.rs` is a thin
 //! wrapper that also calls straight into the matching module here --
 //! see docs/architecture.md for why the crate is split this way.
@@ -32,6 +32,7 @@ pub mod false_;
 pub mod find;
 pub mod free;
 pub mod grep;
+pub mod groupadd;
 pub mod groups;
 pub mod head;
 pub mod hostname;
@@ -46,6 +47,7 @@ pub mod mount;
 pub mod mv;
 pub mod nice;
 pub mod nproc;
+pub mod passwd;
 pub mod pgrep;
 pub mod ping;
 pub mod pkill;
@@ -65,6 +67,7 @@ pub mod su;
 pub mod sudo;
 pub mod sync;
 pub mod tail;
+pub mod tar;
 pub mod tee;
 pub mod touch;
 pub mod tr;
@@ -76,6 +79,8 @@ pub mod umount;
 pub mod uname;
 pub mod uniq;
 pub mod uptime;
+pub mod useradd;
+pub mod usermod;
 pub mod wc;
 pub mod which;
 pub mod whoami;
@@ -87,7 +92,7 @@ pub type AppletFn = fn(Vec<String>) -> AppResult<()>;
 
 /// `(name, usage, run)` for every applet, in the same order as
 /// `docs/commands.md`. `mitos-box` looks names up here; nothing else
-/// in the crate needs to enumerate all 64 by hand.
+/// in the crate needs to enumerate all 69 by hand.
 pub const APPLETS: &[(&str, &str, AppletFn)] = &[
     ("cat", cat::USAGE, cat::run),
     ("ls", ls::USAGE, ls::run),
@@ -153,4 +158,9 @@ pub const APPLETS: &[(&str, &str, AppletFn)] = &[
     ("nproc", nproc::USAGE, nproc::run),
     ("lsblk", lsblk::USAGE, lsblk::run),
     ("lscpu", lscpu::USAGE, lscpu::run),
+    ("groupadd", groupadd::USAGE, groupadd::run),
+    ("useradd", useradd::USAGE, useradd::run),
+    ("passwd", passwd::USAGE, passwd::run),
+    ("usermod", usermod::USAGE, usermod::run),
+    ("tar", tar::USAGE, tar::run),
 ];

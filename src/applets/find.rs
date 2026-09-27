@@ -21,8 +21,10 @@ pub const USAGE: &str =
 /// Minimal shell-glob match against a whole string: `*` matches any
 /// run of characters (including none), `?` matches exactly one.
 /// No character classes -- kept small on purpose, the same call this
-/// crate already made for `grep`'s own regex engine.
-pub fn glob_match(pattern: &str, text: &str) -> bool {
+/// crate already made for `grep`'s own regex engine. `pub(crate)`
+/// rather than private: `pgrep`/`pkill` reuse this exact matcher for
+/// process-name matching rather than each rolling their own.
+pub(crate) fn glob_match(pattern: &str, text: &str) -> bool {
     fn go(p: &[char], t: &[char]) -> bool {
         match p.first() {
             None => t.is_empty(),

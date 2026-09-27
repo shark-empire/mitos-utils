@@ -64,7 +64,7 @@ pub fn run(args: Vec<String>) -> AppResult<()> {
                 }
             }
         };
-        lines.extend(reader.lines().map_while(Result::ok));
+        lines.extend(reader.lines().flatten());
     }
 
     // Extract the sort key for a line: the whole line by default, or

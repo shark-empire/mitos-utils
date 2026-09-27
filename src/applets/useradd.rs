@@ -63,6 +63,13 @@ pub fn run(args: Vec<String>) -> AppResult<()> {
         )));
     }
     let home = home.unwrap_or_else(|| format!("/home/{username}"));
+    // Found while adding common::accounts::validate_field for
+    // usermod: neither -d nor -s was ever checked for a literal ':'
+    // or a newline, either of which would silently corrupt
+    // /etc/passwd's field structure (or inject an extra line) once
+    // written. Same check usermod now applies to its own -c/-d/-s.
+    accounts::validate_field(&home).map_err(AppError::new)?;
+    accounts::validate_field(&shell).map_err(AppError::new)?;
 
     let _lock = accounts::AccountsLock::acquire()
         .map_err(|e| AppError::new(format!("cannot lock account database: {e}")))?;
