@@ -11,6 +11,7 @@ cargo fuzz run printf_render
 cargo fuzz run tr_translate
 cargo fuzz run cut_field_list
 cargo fuzz run chmod_parse_mode
+cargo fuzz run tar_scan_headers
 ```
 
 Each target's doc comment explains what property it's checking (in

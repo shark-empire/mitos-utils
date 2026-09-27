@@ -8,7 +8,7 @@ edition = "2021"
 # docs/architecture.md). cargo-fuzz fundamentally requires
 # libfuzzer-sys; it lives here, isolated in its own workspace (the
 # [workspace] table below), so it never touches mitos-utils itself or
-# any of the ~50 shipped binaries -- `cargo build` at the repo root
+# any of the ~69 shipped binaries -- `cargo build` at the repo root
 # never sees this Cargo.toml at all.
 [dependencies]
 libfuzzer-sys = "0.4"
@@ -40,6 +40,13 @@ bench = false
 [[bin]]
 name = "chmod_parse_mode"
 path = "fuzz_targets/chmod_parse_mode.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "tar_scan_headers"
+path = "fuzz_targets/tar_scan_headers.rs"
 test = false
 doc = false
 bench = false
