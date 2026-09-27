@@ -1,13 +1,13 @@
 # mitos-utils
 
 Core system utilities for [MITOS](../../mitosos) -- a coreutils-style
-suite of ~58 small userspace programs (`cat`, `ls`, `grep`, `chmod`,
+suite of ~67 small userspace programs (`cat`, `ls`, `grep`, `chmod`,
 `ps`, ...), each one both a standalone binary *and* a plain callable
 Rust function, sharing a small common library for error handling,
 path logic, permission formatting, user/group lookups, and
 TOCTOU-safe recursive directory operations. Also buildable as a
 single multiplexed binary (`mitos-box`, busybox/toybox-style) instead
-of ~58 separate binaries.
+of ~67 separate binaries.
 
 ## Status
 
@@ -21,22 +21,26 @@ itself, which doesn't have a userspace to host this crate on yet.
 actually compiles it. See `docs/architecture.md` for what that means
 and what's next.
 
-## ⚠️ `su` / `sudo` need real review before you install them setuid
+## ⚠️ `su` / `sudo` / `useradd` / `groupadd` / `passwd` need real review before you install them setuid
 
 Everything else in this crate being uncompiled-so-far is a normal,
-bounded kind of risk. `su` and `sudo` are a different kind: they only
-do anything at all once installed setuid-root, and a mistake in
-privilege-management code means any local user becoming root, not
-just a wrong answer from a utility. Both are written with real care
-(see `src/common/auth.rs`'s own doc comment for exactly what and why)
-but **have not been audited or run on a real system**, which matters
-categorically more here than everywhere else in this README's status
-notes. Before installing either setuid anywhere with real users or
-secrets: get `common/auth.rs`, `applets/su.rs`, and `applets/sudo.rs`
-reviewed by someone who's read real CVEs against `su`/`sudo`/`login`,
+bounded kind of risk. These five are a different kind: they only do
+anything at all once installed setuid-root, and a mistake in
+privilege-management or account-database code means any local user
+becoming root or the account database getting corrupted, not just a
+wrong answer from a utility. All five are written with real care (see
+`src/common/auth.rs` and `src/common/accounts.rs`'s own doc comments
+for exactly what and why) but **have not been audited or run on a
+real system**, which matters categorically more here than everywhere
+else in this README's status notes. Before installing any of them
+setuid anywhere with real users or secrets: get `common/auth.rs`,
+`common/accounts.rs`, and the five applets themselves reviewed by
+someone who's read real CVEs against `su`/`sudo`/`login`/shadow-utils,
 and test exhaustively in a disposable VM first -- wrong passwords,
-locked accounts, a missing/malformed `/etc/shadow` or
-`/etc/mitos-sudoers`, no controlling terminal, `Ctrl-C` mid-prompt.
+locked accounts, a missing/malformed `/etc/shadow`,
+`/etc/mitos-sudoers`, `/etc/passwd`, or `/etc/group`, a lock file held
+by a crashed previous run, no controlling terminal, `Ctrl-C`
+mid-prompt.
 
 ## What's done vs. what's left
 
@@ -45,9 +49,9 @@ A living checklist -- update it as items get crossed off for real
 
 ### Done
 
-- [x] All 58 utilities + `common` library (errors, output, paths,
+- [x] All 67 utilities + `common` library (errors, output, paths,
       permissions, users)
-- [x] Zero dependencies for the ~58 coreutils-style applets and
+- [x] Zero dependencies for the ~67 coreutils-style applets and
       `common` (`fuzz/` is one deliberate, isolated exception).
       `src/ipc.rs` (terminal/shell IPC, not one of the 50 utilities)
       is the other -- it's what the other MITOS components use to
@@ -71,7 +75,7 @@ A living checklist -- update it as items get crossed off for real
       (`.github/workflows/ci.yml`) -- **written, not yet run**
 - [x] Fuzz test scaffolding: 4 targets (`printf`, `tr`, `cut`'s field
       parser, `chmod`'s mode parser) -- **written, not yet run**
-- [x] Real `man` pages: all 58 utilities + `mitos-box(1)` + 3
+- [x] Real `man` pages: all 67 utilities + `mitos-box(1)` + 3
       overview pages (`man/man1/`, `man/man7/`)
 - [x] Integration API reference for other MITOS crates
       (`docs/integration.md`)
@@ -84,7 +88,7 @@ A living checklist -- update it as items get crossed off for real
         internally line-buffered *unconditionally* (even to a pipe
         or file, not just a terminal), so a `println!`-per-line loop
         was doing one `write(2)` syscall per line; this batches that
-        into one flush per ~64KB.
+        into one flush per ~67KB.
       - `cat` and `tail` are now binary-safe: both work on raw bytes
         and split only on the `\n` byte, never requiring valid UTF-8
         (see docs/compatibility.md). `cat` with neither `-n` nor
@@ -145,6 +149,17 @@ A living checklist -- update it as items get crossed off for real
   filesystem is FAT32 today, which has no concept of either for these
   tools to preserve.
 
+### Against the MITOS Utils spec: what's not started yet
+
+One category still has nothing, and it's a genuinely separate,
+self-contained chunk of work that shouldn't be rushed in alongside a
+batch of smaller utilities the way most of the list below was:
+
+- **Archive operations** -- no `tar` (or anything else that reads or
+  writes an archive format). Not risky the way account-database work
+  is, just unrelated: parsing a binary container format doesn't
+  share code with anything else in this crate.
+
 ### Status updates (now complete)
 
 - [x] **Compiled and run, even once.** Added `scripts/run_ci.sh` to locally verify the build and test pipeline before pushing to CI.
@@ -157,6 +172,8 @@ A living checklist -- update it as items get crossed off for real
 - [x] `su`, `sudo` added -- see the security section above before installing either setuid anywhere real. `sudo` uses `/etc/mitos-sudoers` (one username per line; see `etc/mitos-sudoers.example`), refuses to trust it unless it's root-owned and not group/other-writable, and is deliberately smaller than real sudo (no per-command rules, `NOPASSWD`, timestamp caching, or `-u`).
 - [x] `service` added -- a thin client for mitos-services' real control-socket protocol (status/reload/ping/targets/isolate/launch/apps/logs). No per-unit start/stop/restart because that daemon doesn't have one yet to wrap.
 - [x] `ping` added -- IPv4 only (ICMPv6 is a different protocol/checksum, deferred), tries an unprivileged Linux ping-socket before falling back to a raw socket, fixed 1s interval/timeout and a default count of 4 (no infinite-by-default footgun, no Ctrl-C summary handler to earn that).
+- [x] `pgrep`/`pkill`/`nice`/`nproc`/`lscpu`/`lsblk` added -- the rest of the process-management and device/system-information gaps that didn't need a design discussion first. `pgrep`/`pkill` share one matcher (`find`'s glob) and `kill`'s signal-name parsing rather than each rolling their own. `lscpu`/`lsblk` are summaries of `/proc/cpuinfo`/`/sys/block` -- no cache topology, NUMA nodes, CPU flags, or filesystem-type/UUID detection (that needs parsing each filesystem's own superblock format, real `lsblk`'s job via `libblkid`).
+- [x] `groupadd`/`useradd`/`passwd` added -- see the security section above before installing any of them setuid anywhere real. New `src/common/accounts.rs` holds the shared locking (`/etc/.pwd.lock`, the same file real shadow-utils uses) and atomic-rewrite primitives; `common::auth` gained real password-hash *generation* (`/dev/urandom` salt, `crypt()`) alongside its existing verification. `useradd` creates a matching private group and a home directory but doesn't copy `/etc/skel` or support `-G`/`-r`. `usermod` (editing an existing account) is deliberately not part of this round -- creating/appending is lower-risk than rewriting an existing entry, and it deserved being separated out rather than being the fourth thing rushed in.
 
 ## Layout
 
