@@ -160,9 +160,7 @@ pub fn list_terminal_sockets() -> Vec<(u32, String)> {
 pub async fn ipc_send<T: Serialize>(stream: &mut UnixStream, msg: &T) -> std::io::Result<()> {
     let payload = bincode::serialize(msg)
         .map_err(|e| std::io::Error::new(std::io::ErrorKind::InvalidData, e))?;
-    stream
-        .write_all(&(payload.len() as u32).to_le_bytes())
-        .await?;
+    stream.write_all(&(payload.len() as u32).to_le_bytes()).await?;
     stream.write_all(&payload).await?;
     Ok(())
 }
