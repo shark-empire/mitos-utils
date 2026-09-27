@@ -191,6 +191,21 @@ oddly or error rather than passing bytes through unchanged.
 | `chown` | `owner`, `owner:group`, `-R` (TOCTOU-hardened on Linux), `--` | numeric uid:gid without a passwd entry, `--reference` |
 | `chgrp` | group name, `-R` (TOCTOU-hardened on Linux), `--` | numeric gid without a group entry, `--reference` |
 
+### User management
+
+| Tool | Supported | Not implemented |
+|---|---|---|
+| `useradd` | `-d HOME`, `-s SHELL`; creates a matching private group and home directory | `/etc/skel` copying, `-G` (supplementary groups at creation), `-r` (system account) |
+| `groupadd` | plain group creation | `-g GID` (explicit gid) |
+| `passwd` | interactive change, own password or (as root) another user's | password-strength/history checking, expiry-policy enforcement |
+| `usermod` | `-c`, `-d [-m]`, `-g`, `-aG`/`-G`, `-s`, `-u`, `-L`/`-U` | `-l` (rename), `-o` (allow a duplicate uid), re-`chown`ing files elsewhere on the filesystem when `-u`/`-g` change, cross-filesystem `-d -m` (refused with an error rather than attempted) |
+
+### Archive operations
+
+| Tool | Supported | Not implemented |
+|---|---|---|
+| `tar` | `-c`/`-x`/`-t`, `-v`, `-C DIR` (extract only), the classic bundled-letters form (`tar cf ...`), regular files/directories/symlinks/hard links, member-name path-traversal sanitization on extract | compression (`-z`/`-j`/`-J`), GNU longname/PAX extended headers (ustar's own ~255-byte name limit only), `-r`/`-u` (append/update an existing archive), device nodes/FIFOs/sockets |
+
 ### Misc
 
 | Tool | Supported | Not implemented |

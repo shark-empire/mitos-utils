@@ -69,11 +69,23 @@ docs/compatibility.md for why).
 | `args` | `split_dashdash` | `(args: Vec<String>) -> (Vec<String>, Vec<String>)` | POSIX `--` end-of-options splitting |
 | `safewalk` | `SafeDir` | *Linux* struct + methods (`open_root`, `open_subdir`, `list_names`, `entry_is_symlink`, `entry_mode`, `remove_file`, `remove_empty_dir`, `chmod_entry`, `chown_entry`) | TOCTOU-safe directory traversal primitive -- see the module's own doc comment for the full design rationale |
 | `safewalk` | `remove_tree`/`chmod_tree`/`chown_tree` | *Linux* `(root: &Path, ...) -> io::Result<()>` | The three hardened recursive operations built on `SafeDir`, usable directly by anything else that needs a TOCTOU-safe `rm -r`/`chmod -R`/`chown -R` (rather than reimplementing the pattern) |
+| `accounts` | `AccountsLock` | struct + `acquire() -> io::Result<Self>` | `fcntl()`-based `/etc/.pwd.lock` locking (the same file and locking mechanism real shadow-utils uses), held for the value's lifetime |
+| `accounts` | `atomic_rewrite` | `(path: &str, content: &str, mode: u32) -> io::Result<()>` | Write-to-temp-then-rename, used for every `/etc/passwd`/`/etc/shadow`/`/etc/group` update |
+| `accounts` | `next_free_uid`/`next_free_gid` | `() -> io::Result<u32>` | Next unused id at or above 1000 |
+| `accounts` | `validate_username` | `(name: &str) -> Result<(), String>` | POSIX portable-filename-charset username rule |
+| `accounts` | `username_exists`/`groupname_exists` | `(name: &str) -> bool` | |
+| `accounts` | `gid_for_groupname` | `(name: &str) -> Option<u32>` | Direct `/etc/group` lookup (not NSS) -- backs `usermod -g`'s primary-group resolution |
+| `accounts` | `validate_field` | `(value: &str) -> Result<(), String>` | Rejects a `:` or newline that would corrupt a colon-delimited account-file line -- `useradd`/`usermod`'s free-text fields (home, shell, GECOS comment) |
+| `auth` | *unix* `prompt_password` | `(prompt: &str) -> io::Result<String>` | Echo-off password read from `/dev/tty`, never stdin |
+| `auth` | *unix* `verify_password` | `(username: &str, password: &str) -> io::Result<bool>` | Real `crypt(3)`-backed check against `/etc/shadow`, never a hand-rolled hash |
+| `auth` | *unix* `generate_hash` | `(password: &str) -> io::Result<String>` | Real `crypt(3)`-backed SHA-512-crypt generation, `/dev/urandom` salt |
+| `auth` | *unix* `drop_privileges_to` | `(uid: u32, gid: u32, username: &str) -> io::Result<()>` | POSIX-ordered `initgroups`/`setgid`/`setuid`, with a read-back check |
+| `auth` | `authenticate_interactively` | `(username: &str) -> AppResult<()>` | The shared up-to-3-attempts password prompt loop `su`/`sudo` both use |
 
 ## `applets::` -- every utility as a function
 
 `applets::APPLETS` is a `&[(&str, &str, AppletFn)]` -- `(name, usage,
-run)` for all 50, in the order below. `AppletFn` is
+run)` for all 69, in the same order as `docs/commands.md`. `AppletFn` is
 `fn(Vec<String>) -> AppResult<()>`. Any MITOS crate can either call
 `applets::<name>::run(args)` directly (knowing the name at compile
 time) or walk `APPLETS` to dispatch by a name known only at runtime
@@ -87,7 +99,16 @@ below).
 `tee`, `diff`, `ps`, `kill`, `sleep`, `uptime`, `free`, `uname`,
 `hostname`, `env`, `printenv`, `whoami`, `id`, `groups`, `df`, `du`,
 `mount`, `umount`, `sync`, `dmesg`, `chmod`, `chown`, `chgrp`,
-`clear`, `true` -- see docs/commands.md for each one's flags.
+`clear`, `true` -- see docs/commands.md for each one's flags. **This
+list itself was never extended through the later rounds that took the
+crate from 50 to 69 utilities** (`false`, `date`, `find`, `which`,
+`su`, `sudo`, `service`, `ping`, `pgrep`, `pkill`, `nice`, `nproc`,
+`lsblk`, `lscpu`, `groupadd`, `useradd`, `passwd`, `usermod`, and
+`tar` are all real, all in `APPLETS`, and all missing from the prose
+list above -- a pre-existing gap, not something specific to this
+round's `tar`/`usermod` additions). Treat `docs/commands.md` as the
+current, authoritative one-line-per-command reference, and `APPLETS`
+itself as the literal source of truth for the exact list and order.
 
 A handful of applets also expose their inner parsing/rendering logic
 as standalone `pub fn`s, one level more granular than the whole
@@ -102,6 +123,7 @@ call -- see fuzz/README.md):
 | `applets::tr::delete_chars` | `(input: &str, set1: &[char]) -> String` | `tr` |
 | `applets::cut::parse_field_list` | `(spec: &str) -> AppResult<Vec<usize>>` | `cut` |
 | `applets::echo::expand_escapes` | `(s: &str) -> String` | `echo` |
+| `applets::tar::scan_archive_headers` | `(bytes: &[u8]) -> AppResult<Vec<String>>` | `tar` -- reads an in-memory byte buffer as an archive with no filesystem access at all, returning the member names found; exists mainly for `fuzz/fuzz_targets/tar_scan_headers.rs`, but usable by anything that wants to peek at an archive already in memory |
 
 ## The subprocess contract (for when it's spawned, not called)
 

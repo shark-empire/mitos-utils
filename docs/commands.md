@@ -76,6 +76,10 @@ also reachable through the single multiplexed binary,
 - `sync` -- flush filesystem buffers to disk.
 - `dmesg` -- print the kernel ring buffer (Linux).
 
+## Archive operations
+
+- `tar {-c|-x|-t} -f ARCHIVE [-v] [-C DIR] [FILE...]` -- create, list, or extract a ustar archive (no compression; also accepts the classic bundled form, `tar cf ARCHIVE FILE...`).
+
 ## Permissions
 
 - `chmod [-R] MODE FILE...` -- change file mode (octal or symbolic).
@@ -88,13 +92,14 @@ also reachable through the single multiplexed binary,
 
 ## User management
 
-**`useradd`/`groupadd`/`passwd` have not been independently
+**`useradd`/`groupadd`/`passwd`/`usermod` have not been independently
 security-reviewed -- see README.md's security section before
 installing any of them setuid anywhere real.**
 
 - `useradd [-d HOME] [-s SHELL] USERNAME` -- create a user account (starts locked).
 - `groupadd GROUP` -- create a group.
 - `passwd [USERNAME]` -- change a password (default: your own).
+- `usermod [-c COMMENT] [-d HOME [-m]] [-g GROUP] [-aG GROUPS|-G GROUPS] [-s SHELL] [-u UID] [-L|-U] USERNAME` -- modify an existing user account (root only).
 
 ## Privilege escalation
 
