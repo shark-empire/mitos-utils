@@ -1,0 +1,35 @@
+.TH GROUPADD 1 "September 2026" "mitos-utils 0.1.0" "MITOS User Commands"
+.SH NAME
+groupadd \- create a new group
+.SH SYNOPSIS
+.B groupadd
+.I group
+.SH DESCRIPTION
+Create
+.I group
+in
+.BR /etc/group ,
+with a freshly allocated GID (the lowest unused id at or above 1000).
+.SH SECURITY
+.B This has not been independently security-reviewed.
+Modifies
+.B /etc/group
+directly, under the same lock file
+.RB ( /etc/.pwd.lock )
+real shadow-utils uses. Read
+.B common::accounts
+in the source before installing this setuid anywhere that matters --
+the same weight as
+.BR su (1)/ sudo (1)'s
+own SECURITY sections, for the same reason: a bug here can corrupt
+the account database, not just misbehave for one user. Get it
+reviewed and test it in a disposable VM first.
+.SH GLOBAL OPTIONS
+Every mitos-utils command additionally accepts \fB\-\-help\fR and \fB\-\-version\fR, and \fB\-\-\fR to mark the end of options.
+.SH EXIT STATUS
+0 on success, non-zero if the group already exists, the name is
+invalid, or the database couldn't be locked/written.
+.SH SEE ALSO
+.BR useradd (1),
+.BR passwd (1),
+.BR mitos\-box (1)

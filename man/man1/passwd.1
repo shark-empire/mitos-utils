@@ -1,0 +1,42 @@
+.TH PASSWD 1 "September 2026" "mitos-utils 0.1.0" "MITOS User Commands"
+.SH NAME
+passwd \- change a user's password
+.SH SYNOPSIS
+.B passwd
+.RI [ username ]
+.SH DESCRIPTION
+Change
+.IR username 's
+password (default: your own). Changing your own password still
+requires your current one first; root can change anyone else's
+without it. The new password is hashed with a freshly generated
+SHA-512-crypt salt (real randomness from
+.BR /dev/urandom ,
+never a fixed or predictable one) and written to
+.B /etc/shadow
+in place of the old hash.
+.SH DELIBERATELY NARROWER THAN REAL PASSWD
+No password-strength/complexity checking, no password-history/reuse
+checking, no expiry-policy enforcement.
+.SH SECURITY
+.B This has not been independently security-reviewed.
+Modifies
+.B /etc/shadow
+directly, under the same lock file real shadow-utils uses. Read
+.B common::auth
+and
+.B common::accounts
+in the source before installing this setuid anywhere that matters --
+the same weight as
+.BR su (1)/ sudo (1)'s
+own SECURITY sections. Get it reviewed and test it in a disposable
+VM first.
+.SH GLOBAL OPTIONS
+Every mitos-utils command additionally accepts \fB\-\-help\fR and \fB\-\-version\fR.
+.SH EXIT STATUS
+0 on success, non-zero on failed authentication, mismatched
+confirmation, an unauthorized target user, or a usage error.
+.SH SEE ALSO
+.BR useradd (1),
+.BR su (1),
+.BR mitos\-box (1)

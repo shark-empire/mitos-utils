@@ -1,0 +1,56 @@
+.TH USERADD 1 "September 2026" "mitos-utils 0.1.0" "MITOS User Commands"
+.SH NAME
+useradd \- create a new user account
+.SH SYNOPSIS
+.B useradd
+.RB [ \-d
+.IR home ]
+.RB [ \-s
+.IR shell ]
+.I username
+.SH DESCRIPTION
+Create
+.I username
+in
+.BR /etc/passwd " and " /etc/shadow ,
+with a freshly allocated UID, a new matching private group of the
+same name, and a home directory (mode 0700, owned by the new user;
+default
+.BR /home/ username ).
+The account's password starts
+.B locked
+(a literal
+.B !
+in
+.BR /etc/shadow ) --
+run
+.BR "passwd " username
+separately to actually set one.
+.SH DELIBERATELY NARROWER THAN REAL USERADD
+No
+.B /etc/skel
+copying, no
+.B \-G
+(supplementary groups at creation time), no system-account
+.RB ( \-r )
+support.
+.SH SECURITY
+.B This has not been independently security-reviewed.
+Modifies
+.BR /etc/passwd ", " /etc/shadow ", and " /etc/group
+directly, under the same lock file real shadow-utils uses. Read
+.B common::accounts
+in the source before installing this setuid anywhere that matters --
+the same weight as
+.BR su (1)/ sudo (1)'s
+own SECURITY sections. Get it reviewed and test it in a disposable
+VM first.
+.SH GLOBAL OPTIONS
+Every mitos-utils command additionally accepts \fB\-\-help\fR and \fB\-\-version\fR, and \fB\-\-\fR to mark the end of options.
+.SH EXIT STATUS
+0 on success, non-zero if the account already exists, the name is
+invalid, or the database couldn't be locked/written.
+.SH SEE ALSO
+.BR passwd (1),
+.BR groupadd (1),
+.BR mitos\-box (1)
