@@ -5,6 +5,7 @@
 //! rationale and docs/compatibility.md for what each module does and
 //! doesn't cover.
 
+pub mod accounts;
 pub mod args;
 pub mod auth;
 pub mod errors;

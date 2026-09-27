@@ -228,8 +228,8 @@ pub fn verify_password(username: &str, password: &str) -> io::Result<bool> {
 
     let c_password =
         CString::new(password).map_err(|e| io::Error::new(io::ErrorKind::InvalidInput, e))?;
-    let c_stored = CString::new(stored.as_str())
-        .map_err(|e| io::Error::new(io::ErrorKind::InvalidInput, e))?;
+    let c_stored =
+        CString::new(stored.as_str()).map_err(|e| io::Error::new(io::ErrorKind::InvalidInput, e))?;
 
     let result_ptr = unsafe { ffi::crypt(c_password.as_ptr(), c_stored.as_ptr()) };
     if result_ptr.is_null() {
@@ -245,6 +245,55 @@ pub fn verify_password(username: &str, password: &str) -> io::Result<bool> {
 #[cfg(not(unix))]
 pub fn verify_password(_username: &str, _password: &str) -> io::Result<bool> {
     Ok(false)
+}
+
+const SALT_ALPHABET: &[u8] = b"./0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+
+/// A fresh, random `crypt()` salt, drawn from `/dev/urandom` (never
+/// from a userspace PRNG seeded some other way -- password salts
+/// need real entropy). Each raw byte maps onto the 64-character salt
+/// alphabet via `% 64`: 256 is an exact multiple of 64, so that
+/// modulo introduces no bias toward any character.
+fn random_salt(len: usize) -> io::Result<String> {
+    use std::io::Read;
+    let mut raw = vec![0u8; len];
+    std::fs::File::open("/dev/urandom")?.read_exact(&mut raw)?;
+    Ok(raw
+        .iter()
+        .map(|b| SALT_ALPHABET[(*b as usize) % SALT_ALPHABET.len()] as char)
+        .collect())
+}
+
+/// Generate a new SHA-512-crypt (`$6$...`) hash for `password`, via
+/// the same real `crypt(3)` used to verify one -- never a hand-rolled
+/// hash, for the same reason `verify_password` doesn't have one
+/// either (see this module's doc comment).
+#[cfg(unix)]
+pub fn generate_hash(password: &str) -> io::Result<String> {
+    let salt = random_salt(16)?;
+    let salt_param = format!("$6${salt}$");
+    let c_password =
+        CString::new(password).map_err(|e| io::Error::new(io::ErrorKind::InvalidInput, e))?;
+    let c_salt =
+        CString::new(salt_param).map_err(|e| io::Error::new(io::ErrorKind::InvalidInput, e))?;
+    let result_ptr = unsafe { ffi::crypt(c_password.as_ptr(), c_salt.as_ptr()) };
+    if result_ptr.is_null() {
+        return Err(io::Error::new(
+            io::ErrorKind::Other,
+            "crypt() failed to generate a password hash",
+        ));
+    }
+    Ok(unsafe { std::ffi::CStr::from_ptr(result_ptr) }
+        .to_string_lossy()
+        .into_owned())
+}
+
+#[cfg(not(unix))]
+pub fn generate_hash(_password: &str) -> io::Result<String> {
+    Err(io::Error::new(
+        io::ErrorKind::Unsupported,
+        "password hashing is only implemented on unix",
+    ))
 }
 
 /// Permanently drop from root to `(uid, gid)`, in the only order
